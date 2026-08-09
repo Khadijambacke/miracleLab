@@ -9,8 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"
     rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800;900&display=swap"
-  rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800;900&display=swap"
+    rel="stylesheet">
   <style>
     * {
       box-sizing: border-box;
@@ -4044,8 +4044,11 @@
                 <div class="lib-note">${esc(ing.note)}</div>
               </div>
               ${q ? `<div style="font-size:10px;padding:2px 7px;border-radius:20px;font-weight:700;margin-right:7px;background:${p.light};color:${p.accent}">${p.icon} ${p.short}</div>` : ""}
-              ${INGREDIENT_SHEETS[ing.name] ? `<button class="ing-info-btn" data-ingname="${esc(ing.name)}" title="Fiche technique">ℹ️</button>` : ""}
-              <button class="del-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}">🗑</button>
+              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                ${INGREDIENT_SHEETS[ing.name] ? `<button class="ing-info-btn" data-ingname="${esc(ing.name)}" title="Fiche technique" style="background:#EFF6FF;border:1px solid #BFDBFE;cursor:pointer;color:#3B82F6;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>` : ""}
+                <button class="edit-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Modifier" style="background:#FFF7ED;border:1px solid #FED7AA;cursor:pointer;color:#F56D13;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                <button class="del-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Supprimer" style="background:#FEE2E2;border:none;cursor:pointer;color:#DC2626;font-size:14px;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;">🗑</button>
+              </div>
             </div>`;
       }).join("")}
         `).join("")}

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Miss Miracle Cosmetics · Miracle Lab</title>
-  <link rel="stylesheet" href="css/style.css">
+  @vite(['resources/css/style.css'])
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
 <body class="landing-page">
   <nav class="landing-nav">
     <div class="logo-container" style="display: flex; align-items: center;">
-      <img src="logo.png.png" alt="Miracle Lab Logo" style="height: 80px; width: auto; transform: scale(1.3); transform-origin: left center; mix-blend-mode: darken;" />
+      <img src="/logo.png.png" alt="Miracle Lab Logo" style="height: 80px; width: auto; transform: scale(1.3); transform-origin: left center; mix-blend-mode: darken;" />
     </div>
     <div class="nav-links">
       <a class="nav-link" id="nav-pricing">S'abonner</a>
@@ -115,19 +115,19 @@
   <footer style="padding: 40px 20px; border-top: 1px solid rgba(124, 58, 237, 0.1); background: #ffffff; text-align: center;">
     <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
       <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
-        <img src="logo.png.png" alt="Miracle Lab Logo" style="height: 100px; width: auto; transform: scale(1.4); mix-blend-mode: darken;" />
+        <img src="/logo.png.png" alt="Miracle Lab Logo" style="height: 100px; width: auto; transform: scale(1.4); mix-blend-mode: darken;" />
       </div>
       <div style="font-size: 13px; color: #64748B; font-weight: 500;">© 2026 The Miracle Lab. Tous droits réservés.</div>
     </div>
   </footer>
 
-  <script src="js/shared.js"></script>
+  @vite(['resources/js/shared.js'])
   <script>
     // Event listeners
-    document.getElementById("btn-goto-login")?.addEventListener("click", () => { window.location.href = "login.html"; });
+    document.getElementById("btn-goto-login")?.addEventListener("click", () => { window.location.href = "/login"; });
     document.getElementById("nav-pricing")?.addEventListener("click", () => { document.getElementById("pricing-section")?.scrollIntoView({ behavior: 'smooth' }); });
-    document.getElementById("btn-hero-cta")?.addEventListener("click", () => { window.location.href = "register.html"; });
-    document.getElementById("btn-pricing-buy")?.addEventListener("click", () => { window.location.href = "register.html"; });
+    document.getElementById("btn-hero-cta")?.addEventListener("click", () => { window.location.href = "/register"; });
+    document.getElementById("btn-pricing-buy")?.addEventListener("click", () => { window.location.href = "/register"; });
   </script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
