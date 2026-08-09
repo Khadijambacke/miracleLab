@@ -4,8 +4,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>The Miracle Lab · Miss Miracle Cosmetics</title>
-  <link rel="stylesheet" href="css/style.css?v=1.1.0">
+  <script>
+    // Variables injectées depuis le backend Laravel
+    window.LARAVEL_USER = @json($user);
+    window.LARAVEL_FORMULES = @json($formules);
+    window.LARAVEL_INGREDIENTS = @json($ingredients);
+    window.LARAVEL_CHATS = @json($chats);
+  </script>
+  @vite(['resources/css/style.css'])
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"
@@ -630,14 +638,63 @@
   <div id="app"></div>
 
   <!-- Shared scripts -->
-  <script src="js/shared.js"></script>
-  <script src="js/calculator.js"></script>
+  <script>{!! file_get_contents(resource_path('js/shared.js')) !!}</script>
+  <script>{!! file_get_contents(resource_path('js/calculator.js')) !!}</script>
 
   <script>
-    // 1. Guard route access
-    const user = checkAuth("CLIENT");
-    if (!user) {
-      window.location.href = "login.html";
+    // 1. Get authenticated user from Laravel
+    const user = {
+      id: {{ auth()->user()->id ?? 'null' }},
+      first_name: "{{ explode(' ', auth()->user()->nom_complet ?? '')[0] ?? 'User' }}",
+      last_name: "{{ count(explode(' ', auth()->user()->nom_complet ?? '')) > 1 ? implode(' ', array_slice(explode(' ', auth()->user()->nom_complet ?? ''), 1)) : '' }}",
+      email: "{{ auth()->user()->email ?? '' }}",
+      role: "{{ auth()->user()->role ?? 'CLIENT' }}",
+      subscription_status: "{{ auth()->user()->statut_abonnement ?? 'INACTIF' }}"
+    };
+
+    function loadSavedFormulasFromLaravel() {
+      if (!Array.isArray(window.LARAVEL_FORMULES)) return [];
+
+      return window.LARAVEL_FORMULES.map(f => {
+        const phases = { AQUEUSE: [], HUILEUSE: [], REFROIDISSEMENT: [] };
+        const costs = {};
+
+        if (Array.isArray(f.formule_ingredients)) {
+          f.formule_ingredients.forEach(fi => {
+            const rawPhase = (fi.phase || 'AQUEUSE').toUpperCase();
+            const pKey = (rawPhase === 'PHASE_A' || rawPhase === 'WATER') ? 'AQUEUSE'
+                       : (rawPhase === 'PHASE_B' || rawPhase === 'OIL') ? 'HUILEUSE'
+                       : (rawPhase === 'PHASE_C' || rawPhase === 'COOL_DOWN') ? 'REFROIDISSEMENT'
+                       : rawPhase;
+
+            if (!phases[pKey]) phases[pKey] = [];
+
+            const ingName = fi.ingredient ? fi.ingredient.nom : (fi.nom_ingredient_custom || 'Ingrédient');
+            phases[pKey].push({
+              id: fi.id || Math.floor(Math.random() * 100000),
+              name: ingName,
+              pct: String(fi.pourcentage || '0')
+            });
+
+            if (fi.cout_par_kg) {
+              costs[ingName] = parseFloat(fi.cout_par_kg) || 0;
+            }
+          });
+        }
+
+        return {
+          id: f.id,
+          name: f.nom || 'Formule sans nom',
+          type: f.type_produit || 'LEAVE_IN',
+          skeletonType: f.type_produit || 'Leave-in',
+          category: f.categorie || 'haircare',
+          totalWeight: parseFloat(f.poids_lot) || 1000,
+          notes: f.notes || '',
+          phases: phases,
+          costs: costs,
+          date: f.created_at ? new Date(f.created_at).toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR')
+        };
+      });
     }
 
     // 2. Initialize local reactive state
@@ -658,6 +715,7 @@
       library: deepClone(LIBRARY),
       showLibrary: false,
       showSaved: false,
+      showSaveModal: false,
       showIngSheet: null,
       libTab: "AQUEUSE",
       libSearch: "",
@@ -668,7 +726,7 @@
       ddSearch: "",
       toast: null,
       toastTimer: null,
-      savedFormulas: loadSaved(),
+      savedFormulas: loadSavedFormulasFromLaravel(),
       history: [],
       historyIdx: -1,
 
@@ -683,6 +741,38 @@
       chatInput: "",
       simulatedTyping: false
     };
+
+    // Merge database & user ingredients from Laravel into state.library
+    function mergeDatabaseIngredients() {
+      if (Array.isArray(window.LARAVEL_INGREDIENTS) && window.LARAVEL_INGREDIENTS.length > 0) {
+        window.LARAVEL_INGREDIENTS.forEach(ing => {
+          const rawPhase = (ing.phase || 'AQUEUSE').toUpperCase();
+          const phase = (rawPhase === 'PHASE_A' || rawPhase === 'WATER') ? 'AQUEUSE' 
+                      : (rawPhase === 'PHASE_B' || rawPhase === 'OIL') ? 'HUILEUSE' 
+                      : (rawPhase === 'PHASE_C' || rawPhase === 'COOL_DOWN') ? 'REFROIDISSEMENT'
+                      : rawPhase;
+          
+          if (!state.library[phase]) {
+            state.library[phase] = {};
+          }
+          
+          const groupName = ing.est_personnalise ? "✨ Mes Ingrédients Personnalisés" : "📦 Base de Données";
+          if (!state.library[phase][groupName]) {
+            state.library[phase][groupName] = [];
+          }
+
+          const exists = state.library[phase][groupName].some(item => item.name.toLowerCase() === (ing.nom || '').toLowerCase());
+          if (!exists && ing.nom) {
+            state.library[phase][groupName].push({
+              name: ing.nom,
+              note: ing.inci ? `INCI: ${ing.inci}` : (ing.note || "Ingrédient de la base de données"),
+              maxPct: ing.max_pct || ing.dosage_max || null
+            });
+          }
+        });
+      }
+    }
+    mergeDatabaseIngredients();
 
     // Skeletons definitions
     const HAIRCARE_TYPES = [
@@ -771,7 +861,11 @@
 
     // Page rendering functions
     function render() {
+      const mainEl = document.querySelector(".dash-main");
+      const scrollTop = mainEl ? mainEl.scrollTop : 0;
       document.getElementById("app").innerHTML = buildDashboardHTML();
+      const newMainEl = document.querySelector(".dash-main");
+      if (newMainEl) newMainEl.scrollTop = scrollTop;
       bindEvents();
       if (window.lucide) lucide.createIcons();
     }
@@ -784,7 +878,7 @@
       <div class="dashboard-layout">
         <!-- Mobile Header -->
         <div class="mobile-header">
-          <img src="logo.png.png" alt="MiracleLab" class="mobile-logo-img" />
+          <img src="/logo.png.png" alt="MiracleLab" class="mobile-logo-img" />
           <button class="hamburger-btn" onclick="toggleSidebar()">
             <svg data-lucide="menu"></svg>
           </button>
@@ -796,7 +890,7 @@
         <!-- Sidebar -->
         <aside class="dash-sidebar" id="dashSidebar">
           <div class="sidebar-logo" style="display: flex; justify-content: center; padding: 20px 0;">
-            <img src="logo.png.png" alt="Miraclelab" style="height: 120px; width: auto; transform: scale(1.2); mix-blend-mode: darken;" />
+            <img src="/logo.png.png" alt="Miraclelab" style="height: 120px; width: auto; transform: scale(1.2); mix-blend-mode: darken;" />
           </div>
 
           <div class="sidebar-section-label">Navigation</div>
@@ -859,6 +953,7 @@
       ${buildChatWidget()}
       
       <!-- Modals & Overlay Panels -->
+      ${state.showSaveModal ? buildSaveFormulaModal() : ""}
       ${state.openDropdown ? buildDropdownPanel() : ""}
       ${state.showLibrary ? buildLibraryModal() : ""}
       ${state.showIngSheet ? buildIngredientSheet(state.showIngSheet) : ""}
@@ -1003,7 +1098,7 @@
                   <svg data-lucide="clock" style="width: 15px; height: 15px; color: #3B82F6;"></svg>
                   <span style="font-size: 12.5px; color: #8E7E72; font-weight: 600;">Formulations en cours</span>
                 </div>
-                <span style="font-size: 15px; font-weight: 800; color: #1C0F32;">3</span>
+                <span style="font-size: 15px; font-weight: 800; color: #1C0F32;">${state.savedFormulas.length > 0 ? state.savedFormulas.length : 0}</span>
               </div>
 
               <!-- Volume formulé -->
@@ -1013,7 +1108,7 @@
                   <span style="font-size: 12.5px; color: #8E7E72; font-weight: 600;">Volume formulé</span>
                 </div>
                 <span style="font-size: 15px; font-weight: 800; color: #1C0F32;">${(() => {
-                  const total = state.savedFormulas.reduce((sum, f) => sum + (parseFloat(f.totalWeight) || 1000), 0);
+                  const total = state.savedFormulas.reduce((sum, f) => sum + (parseFloat(f.totalWeight) || 0), 0);
                   return total >= 1000 ? (total / 1000).toFixed(1) + ' kg' : total + ' g';
                 })()}</span>
               </div>
@@ -1024,7 +1119,14 @@
                   <svg data-lucide="coins" style="width: 15px; height: 15px; color: #F59E0B;"></svg>
                   <span style="font-size: 12.5px; color: #8E7E72; font-weight: 600;">Coût moyen estimé</span>
                 </div>
-                <span style="font-size: 15px; font-weight: 800; color: #1C0F32;">~ 12.50 €/kg</span>
+                <span style="font-size: 15px; font-weight: 800; color: #1C0F32;">${(() => {
+                  if (state.savedFormulas.length === 0) return '0 FCFA';
+                  const totalCosts = state.savedFormulas.reduce((sum, f) => {
+                    const c = Object.values(f.costs || {}).reduce((a, b) => a + (parseFloat(b) || 0), 0);
+                    return sum + c;
+                  }, 0);
+                  return totalCosts > 0 ? (totalCosts / state.savedFormulas.length).toFixed(0) + ' FCFA/kg' : '—';
+                })()}</span>
               </div>
 
             </div>
@@ -1169,8 +1271,8 @@
                   <div class="lib-note" style="font-size:11px;color:#6B7280">${esc(ing.note)}</div>
                 </div>
                 ${q ? `<div style="font-size:10px;padding:2px 7px;border-radius:20px;font-weight:700;margin-right:7px;background:${p.light};color:${p.accent}">${p.icon} ${p.short}</div>` : ""}
-                ${INGREDIENT_SHEETS[ing.name] ? `<button class="ing-info-btn" data-ingname="${esc(ing.name)}" title="Fiche technique">ℹ️</button>` : ""}
                 <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                  ${INGREDIENT_SHEETS[ing.name] ? `<button class="ing-info-btn" data-ingname="${esc(ing.name)}" title="Fiche technique" style="background:#EFF6FF;border:1px solid #BFDBFE;cursor:pointer;color:#3B82F6;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>` : ""}
                   <button class="edit-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Modifier" style="background:#FFF7ED;border:1px solid #FED7AA;cursor:pointer;color:#F56D13;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
                   <button class="del-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Supprimer" style="background:#FEE2E2;border:none;cursor:pointer;color:#DC2626;font-size:14px;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;">🗑</button>
                 </div>
@@ -1233,7 +1335,7 @@
                 <td>
                   <div style="display:flex; align-items:center; gap:10px;">
                     <span>${f.date || 'Récemment'}</span>
-                    <button onclick="alert('Le PDF sera généré prochainement.')" style="background:#FAF5FF; color:#7C3AED; border:1px solid #D8B4FE; border-radius:6px; padding:4px 8px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px; transition:all 0.2s; box-shadow:0 1px 2px rgba(124,58,237,0.1);">
+                    <button class="btn-export-pdf-saved" data-pdfid="${f.id}" style="background:#FAF5FF; color:#7C3AED; border:1px solid #D8B4FE; border-radius:6px; padding:4px 8px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px; transition:all 0.2s; box-shadow:0 1px 2px rgba(124,58,237,0.1);">
                       <svg data-lucide="file-text" style="width:13px; height:13px;"></svg> PDF
                     </button>
                   </div>
@@ -1783,8 +1885,8 @@
                     <div class="lib-note" style="font-size:11px;color:#6B7280">${esc(ing.note)}</div>
                   </div>
                   ${q ? `<div style="font-size:10px;padding:2px 7px;border-radius:20px;font-weight:700;margin-right:7px;background:${p.light};color:${p.accent}">${p.icon} ${p.short}</div>` : ""}
-                  ${INGREDIENT_SHEETS[ing.name] ? `<button class="ing-info-btn" data-ingname="${esc(ing.name)}" title="Fiche technique">ℹ️</button>` : ""}
                   <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                    ${INGREDIENT_SHEETS[ing.name] ? `<button class="ing-info-btn" data-ingname="${esc(ing.name)}" title="Fiche technique" style="background:#EFF6FF;border:1px solid #BFDBFE;cursor:pointer;color:#3B82F6;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>` : ""}
                     <button class="edit-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Modifier" style="background:#FFF7ED;border:1px solid #FED7AA;cursor:pointer;color:#F56D13;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
                     <button class="del-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Supprimer" style="background:#FEE2E2;border:none;cursor:pointer;color:#DC2626;font-size:14px;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;">🗑</button>
                   </div>
@@ -2065,13 +2167,41 @@
       render();
     }
 
-    function saveCurrentFormula() {
-      if (!state.formulaName) {
-        const val = prompt("Entrez un nom pour votre formulation :");
-        if (!val) return;
-        state.formulaName = val;
+    function openSaveModal() {
+      state.showSaveModal = true;
+      render();
+      setTimeout(() => {
+        const inp = document.getElementById("save-formula-name-input");
+        if (inp) { inp.focus(); inp.select(); }
+      }, 60);
+    }
+
+    function closeSaveModal() {
+      state.showSaveModal = false;
+      render();
+    }
+
+    function confirmSaveFormula() {
+      const nameInput = document.getElementById("save-formula-name-input");
+      const notesInput = document.getElementById("save-formula-notes-input");
+      const pdfCheckbox = document.getElementById("save-auto-pdf");
+
+      const name = nameInput ? nameInput.value.trim() : "";
+      if (!name) {
+        showToast("⚠️ Veuillez saisir un nom de formule");
+        nameInput?.focus();
+        return;
       }
 
+      state.formulaName = name;
+      if (notesInput) state.notes = notesInput.value;
+      const shouldGeneratePdf = pdfCheckbox ? pdfCheckbox.checked : false;
+
+      state.showSaveModal = false;
+      executeSaveFormula(shouldGeneratePdf);
+    }
+
+    function executeSaveFormula(shouldGeneratePdf = false) {
       const newForm = {
         id: Date.now(),
         name: state.formulaName,
@@ -2085,15 +2215,100 @@
         date: new Date().toLocaleDateString('fr-FR')
       };
 
-      state.savedFormulas.push(newForm);
-      saveToDisk(state.savedFormulas);
+      const backendIngredients = [];
+      for (const phase in newForm.phases) {
+        newForm.phases[phase].forEach(ing => {
+          if (ing.name && ing.name.trim()) {
+            backendIngredients.push({
+              nom_ingredient_custom: ing.name,
+              phase: phase,
+              pourcentage: parseFloat(ing.pct) || 0,
+              cout_par_kg: state.costs[ing.name] || 0
+            });
+          }
+        });
+      }
 
-      // Increment formula count in database
-      incrementFormulaCount(state.currentUser.email);
-      state.clients = loadClients(); // Reload clients list
+      fetch('/formules', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+          nom: newForm.name,
+          categorie: newForm.category,
+          type_produit: newForm.type,
+          poids_lot: newForm.totalWeight,
+          notes: newForm.notes,
+          ingredients: backendIngredients
+        })
+      }).then(r => r.json()).then(data => {
+        if (data.formule && data.formule.id) {
+          newForm.id = data.formule.id;
+        }
+        state.savedFormulas.unshift(newForm);
+        showToast("💾 Formule enregistrée avec succès !");
+        render();
 
-      showToast("💾 Formule enregistrée avec succès !");
-      render();
+        if (shouldGeneratePdf) {
+          setTimeout(() => exportPDF(), 350);
+        }
+      }).catch(e => {
+        console.error(e);
+        state.savedFormulas.unshift(newForm);
+        showToast("💾 Formule enregistrée localement !");
+        render();
+
+        if (shouldGeneratePdf) {
+          setTimeout(() => exportPDF(), 350);
+        }
+      });
+    }
+
+    function buildSaveFormulaModal() {
+      return `
+      <div class="modal-overlay" id="save-modal-overlay">
+        <div class="modal-box" style="max-width: 480px; padding: 25px;" onclick="event.stopPropagation()">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #F1EBE3; padding-bottom: 15px;">
+            <h3 style="font-weight: 800; font-size: 18px; color: #1C0F32; margin: 0; display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 22px;">💾</span> Enregistrer ma formulation
+            </h3>
+            <button class="btn-close" id="btn-close-save-modal">×</button>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div>
+              <label style="display: block; font-size: 11px; font-weight: 800; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+                Nom de la formule <span style="color: #EF4444;">*</span>
+              </label>
+              <input id="save-formula-name-input" class="add-input" placeholder="ex: Sérum Éclat Niacinamide & Aloe Vera..." value="${esc(state.formulaName)}" style="width: 100%; box-sizing: border-box; font-weight: 700; font-size: 14px; padding: 10px 12px; border: 1px solid #E5E7EB; border-radius: 10px;" />
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 11px; font-weight: 800; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+                Notes & Instructions (optionnel)
+              </label>
+              <textarea id="save-formula-notes-input" class="add-input" rows="3" placeholder="Instructions de mélange, consignes d'atelier..." style="width: 100%; box-sizing: border-box; resize: vertical; font-family: inherit; font-size: 13px; padding: 10px 12px; border: 1px solid #E5E7EB; border-radius: 10px;">${esc(state.notes)}</textarea>
+            </div>
+
+            <div style="background: #F5F3FF; border: 1px solid #DDD6FE; border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; gap: 10px;">
+              <input type="checkbox" id="save-auto-pdf" checked style="width: 18px; height: 18px; accent-color: #7C3AED; cursor: pointer;" />
+              <label for="save-auto-pdf" style="font-size: 12.5px; font-weight: 700; color: #5B21B6; cursor: pointer; user-select: none;">
+                📄 Générer & imprimer la fiche PDF d'atelier après enregistrement
+              </label>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+              <button class="btn-cancel" id="btn-cancel-save-modal">Annuler</button>
+              <button class="btn-confirm" id="btn-confirm-save-formula" style="background: linear-gradient(135deg, #7C3AED, #6D28D9); color: #fff; font-weight: 800; padding: 10px 20px; border-radius: 10px; cursor: pointer; border: none;">
+                💾 Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>`;
     }
 
     function loadFormula(id) {
@@ -2116,10 +2331,21 @@
 
     function deleteFormula(id) {
       if (!confirm("Supprimer cette formule ?")) return;
-      state.savedFormulas = state.savedFormulas.filter(s => s.id !== id);
-      saveToDisk(state.savedFormulas);
-      render();
-      showToast("Formule supprimée");
+      
+      fetch(`/formules/${id}`, {
+          method: 'DELETE',
+          headers: {
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+              'Accept': 'application/json'
+          }
+      }).then(() => {
+          state.savedFormulas = state.savedFormulas.filter(s => s.id !== id);
+          render();
+          showToast("Formule supprimée");
+      }).catch(err => {
+          console.error(err);
+          showToast("Erreur lors de la suppression");
+      });
     }
 
     function exportCSV() {
@@ -2270,6 +2496,114 @@
       setTimeout(() => w.print(), 500);
     }
 
+    function exportPDFForFormula(id) {
+      const f = state.savedFormulas.find(s => s.id === id);
+      if (!f) {
+        showToast("Formule introuvable");
+        return;
+      }
+      
+      const tw = f.totalWeight || 1000;
+      const typeKey = f.type || 'LEAVE_IN';
+      const type = FORMULA_TYPES[typeKey] || FORMULA_TYPES.LEAVE_IN;
+      const wp = waterPct(f.phases, typeKey);
+      const date = f.date || new Date().toLocaleDateString('fr-FR');
+      const formulaName = f.name || 'Formule';
+
+      const donutSvg = buildDonutChartSvg(wp);
+
+      let legendHtml = '';
+      if (type.hasWater && wp > 0) {
+        legendHtml += `
+          <div style="display:flex; justify-space-between; align-items:center; font-size:10px; margin-bottom:4px; font-weight:600; color:#8E7E72;">
+            <span style="display:flex; align-items:center; gap:6px;"><span style="width:7px; height:7px; border-radius:50%; background:#0EA5E9; display:inline-block;"></span>Eau</span>
+            <span style="font-weight:700; color:#1C0F32;">${wp.toFixed(1)}%</span>
+          </div>`;
+      }
+      Object.entries(f.phases).forEach(([pk, rows]) => {
+        const sum = sumPhase(rows);
+        if (sum > 0) {
+          const ph = getPhaseDisplay(pk, typeKey);
+          legendHtml += `
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; margin-bottom:4px; font-weight:600; color:#8E7E72;">
+              <span style="display:flex; align-items:center; gap:6px;"><span style="width:7px; height:7px; border-radius:50%; background:${ph.color}; display:inline-block;"></span>${ph.short}</span>
+              <span style="font-weight:700; color:#1C0F32;">${sum.toFixed(1)}%</span>
+            </div>`;
+        }
+      });
+
+      let html = `<html><head><meta charset="UTF-8"><title>${formulaName}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+    body{font-family:'Plus Jakarta Sans',Arial,sans-serif;max-width:720px;margin:0 auto;padding:30px;color:#1C0F32;background:#FFF}
+    .pdf-header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; border-bottom: 2px solid #EDE9FE; padding-bottom: 20px; }
+    h1{color:#7C3AED;font-size:26px;margin:0 0 4px;font-weight:800}
+    .meta{color:#6B7280;font-size:13px}
+    .pdf-donut-card {
+      border: 1.5px solid #F1EBE3;
+      border-radius: 16px;
+      padding: 12px 15px;
+      background: #FCFAF7;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      width: 220px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    }
+    .phase-title{font-size:11px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:#7C3AED;margin:20px 0 8px;padding-bottom:5px;border-bottom:2px solid #EDE9FE}
+    table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:4px}
+    th{background:#F5F0FF;color:#7C3AED;padding:7px 10px;text-align:left;font-size:10px;letter-spacing:1.5px;text-transform:uppercase}
+    td{padding:7px 10px;border-bottom:1px solid #F3F4F6}
+    tr:nth-child(even) td{background:#FAFAFA}
+    .total-row td{font-weight:800;background:#EDE9FE!important;color:#7C3AED}
+    .water-row td{background:#E0F7FA!important;color:#0E7490;font-weight:600}
+    .footer{margin-top:32px;font-size:10px;color:#9CA3AF;text-align:center;padding-top:14px;border-top:1px solid #E5E7EB}
+  </style></head><body>
+  
+  <div class="pdf-header-container">
+    <div>
+      <h1>${formulaName}</h1>
+      <div class="meta">Type : ${type.label || typeKey} &nbsp;·&nbsp; Lot : ${tw}g &nbsp;·&nbsp; Date : ${date}</div>
+    </div>
+    <div class="pdf-donut-card">
+      <div style="transform: scale(0.7); transform-origin: center; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center;">
+        ${donutSvg}
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:11px; font-weight:800; color:#1C0F32; margin-bottom:5px;">Répartition</div>
+        ${legendHtml}
+      </div>
+    </div>
+  </div>`;
+
+      if (type.hasWater) {
+        html += `<div class="phase-title">💧 Phase Aqueuse</div>
+    <table><tr><th>Ingrédient</th><th>%</th><th>Poids (g)</th></tr>
+    <tr class="water-row"><td>Eau Distillée <small>(AUTO)</small></td><td>${wp.toFixed(2)}%</td><td>${((tw * wp) / 100).toFixed(1)}g</td></tr>
+    </table>`;
+      }
+      for (const [pk, rows] of Object.entries(f.phases)) {
+        const ph = getPhaseDisplay(pk, typeKey);
+        const named = rows.filter(r => r.name && r.pct);
+        if (!named.length) continue;
+        html += `<div class="phase-title">${ph.icon} ${ph.label}</div>
+    <table><tr><th>Ingrédient</th><th>%</th><th>Poids (g)</th></tr>
+    ${named.map(r => { const g = ((tw * (parseFloat(r.pct) || 0)) / 100).toFixed(1); return `<tr><td>${r.name}</td><td>${r.pct}%</td><td>${g}g</td></tr>`; }).join('')}
+    </table>`;
+      }
+      if (f.notes) {
+        html += `<div class="phase-title">📝 Notes & Instructions</div>
+        <div style="background:#FAF7F2; padding:10px 14px; border-radius:8px; font-size:12px; line-height:1.5; color:#4B5563;">${esc(f.notes)}</div>`;
+      }
+      html += `<table><tr class="total-row"><td>TOTAL</td><td>100%</td><td>${tw}g</td></tr></table>
+  <div class="footer">Généré par The Miracle Lab &nbsp;·&nbsp; Miss Miracle Cosmetics</div>
+  </body></html>`;
+      const w = window.open('', '_blank');
+      w.document.write(html);
+      w.document.close();
+      setTimeout(() => w.print(), 500);
+    }
+
     function highlightMatch(text, query) {
       if (!query) return esc(text);
       const idx = text.toLowerCase().indexOf(query.toLowerCase());
@@ -2282,11 +2616,30 @@
       if (!n) return;
       const ph = state.libNewPhase || state.libTab;
       const groups = state.library[ph];
-      const groupKey = ph === "AQUEUSE" ? "Actifs Capillaires" : ph === "HUILEUSE" ? "Huiles Végétales" : "Actifs & Vitamines";
+      const groupKey = "✨ Mes Ingrédients Personnalisés";
       if (!groups[groupKey]) groups[groupKey] = [];
-      groups[groupKey].push({ name: n, note: state.libNewNote.trim() || "Ingrédient personnalisé" });
+      groups[groupKey].unshift({ name: n, note: state.libNewNote.trim() || "Ingrédient personnalisé" });
+
+      // Save to Backend Database asynchronously
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      if (csrfToken) {
+        fetch('/ingredients', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            nom: n,
+            phase: ph,
+            inci: state.libNewNote.trim() || null
+          })
+        }).catch(err => console.log('Ingrédient sauvegardé localement:', err));
+      }
+
       state.libNewName = ""; state.libNewNote = ""; state.libAdding = false;
-      showToast("✅ Ingrédient ajouté !");
+      showToast("✅ Ingrédient ajouté à votre base !");
       render();
     }
 
@@ -2318,7 +2671,7 @@
 
       const adminBtn = document.getElementById("btn-goto-admin");
       if (adminBtn) {
-        adminBtn.addEventListener("click", () => { window.location.href = "dashboard-admin.html"; });
+        adminBtn.addEventListener("click", () => { window.location.href = "/dashboard"; });
       }
 
       // Category toggle pills
@@ -2383,7 +2736,11 @@
       document.getElementById("btn-lib")?.addEventListener("click", () => { state.showLibrary = true; render(); });
       document.getElementById("btn-admin-show-lib")?.addEventListener("click", () => { state.showLibrary = true; render(); });
       document.getElementById("btn-cost")?.addEventListener("click", () => { state.showCost = !state.showCost; render(); });
-      document.getElementById("btn-save")?.addEventListener("click", saveCurrentFormula);
+      document.getElementById("btn-save")?.addEventListener("click", openSaveModal);
+      document.getElementById("btn-confirm-save-formula")?.addEventListener("click", confirmSaveFormula);
+      document.getElementById("btn-close-save-modal")?.addEventListener("click", closeSaveModal);
+      document.getElementById("btn-cancel-save-modal")?.addEventListener("click", closeSaveModal);
+      document.getElementById("save-modal-overlay")?.addEventListener("click", e => { if (e.target.id === "save-modal-overlay") closeSaveModal(); });
       document.getElementById("btn-export")?.addEventListener("click", exportCSV);
       document.getElementById("btn-copy")?.addEventListener("click", copyFormulaText);
       document.getElementById("btn-pdf")?.addEventListener("click", exportPDF);
@@ -2401,6 +2758,7 @@
       // History loaders
       document.querySelectorAll(".btn-load").forEach(el => el.addEventListener("click", e => loadFormula(parseInt(e.currentTarget.dataset.loadid))));
       document.querySelectorAll(".btn-del-saved").forEach(el => el.addEventListener("click", e => deleteFormula(parseInt(e.currentTarget.dataset.delid))));
+      document.querySelectorAll(".btn-export-pdf-saved").forEach(el => el.addEventListener("click", e => { e.stopPropagation(); exportPDFForFormula(parseInt(e.currentTarget.dataset.pdfid)); }));
 
       // Note text area
       const noteTextArea = document.getElementById("notes-textarea");
@@ -2453,9 +2811,10 @@
       document.querySelectorAll(".del-phase-btn").forEach(el => el.addEventListener("click", e => removePhase(e.currentTarget.dataset.phasekey)));
       document.querySelectorAll(".add-row-dashed-btn").forEach(el => el.addEventListener("click", e => addRow(e.currentTarget.dataset.phase)));
 
-      // Dropdown selector mousedown
+      // Dropdown selector mousedown & click (prevent default page jump/reload)
       document.querySelectorAll(".dd-trigger").forEach(el => {
-        el.addEventListener("mousedown", e => { e.preventDefault(); openDD(el.dataset.ddkey, el); });
+        el.addEventListener("mousedown", e => { e.preventDefault(); e.stopPropagation(); openDD(el.dataset.ddkey, el); });
+        el.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); });
       });
 
       // Close Dropdown panel outside click
@@ -2493,21 +2852,40 @@
             html += `<div class="dd-add" id="dd-add-custom">+ Ajouter « ${esc(state.ddSearch)} »</div>`;
           }
           list.innerHTML = html;
-
-          // Re-bind click elements
-          list.querySelectorAll(".dd-item").forEach(item => {
-            item.addEventListener("mousedown", ev => { ev.preventDefault(); const [ppk, piid] = state.openDropdown.split("-"); selectIngredient(ppk, piid, item.dataset.ingname); });
-          });
-          list.querySelector(".dd-clear")?.addEventListener("mousedown", ev => { ev.preventDefault(); const [ppk, piid] = state.openDropdown.split("-"); selectIngredient(ppk, piid, ""); });
-          list.querySelector("#dd-add-custom")?.addEventListener("mousedown", ev => { ev.preventDefault(); const [ppk, piid] = state.openDropdown.split("-"); selectIngredient(ppk, piid, state.ddSearch.trim()); });
         });
 
-        // Bind initial items
-        ddPanel.querySelectorAll(".dd-item").forEach(item => {
-          item.addEventListener("mousedown", e => { e.preventDefault(); const [ppk, piid] = state.openDropdown.split("-"); selectIngredient(ppk, piid, item.dataset.ingname); });
+        // Event delegation on ddPanel to ensure item clicks always register
+        ddPanel.addEventListener("mousedown", e => {
+          const item = e.target.closest(".dd-item");
+          if (item) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!state.openDropdown) return;
+            const [ppk, piid] = state.openDropdown.split("-");
+            selectIngredient(ppk, piid, item.dataset.ingname);
+            return;
+          }
+
+          const clearBtn = e.target.closest(".dd-clear");
+          if (clearBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!state.openDropdown) return;
+            const [ppk, piid] = state.openDropdown.split("-");
+            selectIngredient(ppk, piid, "");
+            return;
+          }
+
+          const addCustomBtn = e.target.closest("#dd-add-custom");
+          if (addCustomBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!state.openDropdown) return;
+            const [ppk, piid] = state.openDropdown.split("-");
+            selectIngredient(ppk, piid, state.ddSearch.trim());
+            return;
+          }
         });
-        document.getElementById("dd-clear")?.addEventListener("mousedown", e => { e.preventDefault(); const [ppk, piid] = state.openDropdown.split("-"); selectIngredient(ppk, piid, ""); });
-        document.getElementById("dd-add-custom")?.addEventListener("mousedown", e => { e.preventDefault(); const [ppk, piid] = state.openDropdown.split("-"); selectIngredient(ppk, ppk === 'AQUEUSE' ? 1 : 2, state.ddSearch.trim()); });
 
         setTimeout(() => document.getElementById("dd-search-input")?.focus(), 80);
       }
@@ -2554,15 +2932,25 @@
         const email = state.currentUser.email;
         if (!state.chats[email]) state.chats[email] = [];
 
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-
-        state.chats[email].push({ sender: "client", text: text, time: timeStr });
-        saveChats(state.chats);
-
-        state.chatInput = "";
-        render();
-        scrollChatToBottom("chat-messages-box");
+        fetch('/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ message: text })
+        }).then(r => r.json()).then(data => {
+            if(data.success) {
+                state.chats[email].push(data.message);
+                state.chatInput = "";
+                render();
+                scrollChatToBottom("chat-messages-box");
+            }
+        });
+        
+        // Optimistic UI update while waiting for fetch
+        input.value = "";
       };
 
       document.getElementById("btn-chat-send")?.addEventListener("click", sendClientMessage);

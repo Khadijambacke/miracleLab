@@ -27,190 +27,76 @@ L'application **The Miracle Lab** est un outil d'aide à la formulation cosméti
 * **Feuille de Style** : `frontend/css/style.css`.
 * **Scripts JavaScript** :
   * `frontend/js/shared.js` : Gère la base de données fictive (utilisateurs, sessions, historiques de chat) persistée dans le `localStorage`.
-  * `frontend/js/calculator.js` : Contient l'intelligence métier de la calculette cosmétique (base de données d'ingrédients, logique des phases, calculs de---
+  * `frontend/js/calculator.js` : Contient l'intelligence métier de la calculette cosmétique (base de données d'ingrédients, logique des phases, calculs de pH, coûts et règles de compatibilité).
 
-## 3. Logique Fonctionnelle et Moteurs de Calcul (Code d'Origine de `index.html.bak`)
+---
 
-L'intégralité des calculs est centralisée dans le fichier [calculator.js](file:///c:/missmiracle/frontend/js/calculator.js) (et se trouvait historiquement dans la section script de [index.html.bak](file:///c:/missmiracle/index.html.bak) entre les lignes 3020 et 3296).
+## 3. Logique Fonctionnelle et Moteurs de Calcul
+
+L'intégralité des calculs est centralisée dans le fichier `calculator.js`.
 
 ### 3.1. Le Moteur de Formulation (Calculette)
 
-La formulation cosmétique repose sur une répartition des ingrédients en **phases** (Phase Aqueuse, Phase Huileuse, Refroidissement).
+La formulation cosmétique repose sur une répartition stricte des ingrédients en **phases** (Phase Aqueuse, Phase Huileuse, Refroidissement).
 
 #### A. Règle des 100 % et Calcul de l'Eau
-Dans une formulation contenant de l'eau, le système calcule automatiquement le pourcentage d'eau nécessaire pour compléter la formule à 100 % à l'aide des fonctions suivantes :
-
-```javascript
-// Calcule la somme des pourcentages d'une phase donnée
-function sumPhase(rows) { 
-  return rows.reduce((a, r) => a + (parseFloat(r.pct) || 0), 0); 
-}
-
-// Calcule la somme de tous les ingrédients saisis par l'utilisateur (hors eau automatique)
-function nonWater() { 
-  return Object.values(state.phases).reduce((a, rows) => a + sumPhase(rows), 0); 
-}
-
-// Calcule automatiquement la part d'eau restante pour atteindre 100%
-function waterPct() {
-  const type = FORMULA_TYPES[state.formulaType];
-  if (!type.hasWater) return 0;
-  return Math.max(0, parseFloat((100 - nonWater()).toFixed(4)));
-}
-
-// Calcule le total général (Ingrédients + Eau)
-function totalPct() { 
-  return nonWater() + waterPct(); 
-}
-
-// Vérifie si la formule est en surdosage (> 100%)
-function isOver() { 
-  return nonWater() > 100.001; 
-}
-
-// Confirme si la formule fait exactement 100%
-function isOk() { 
-  return !isOver() && Math.abs(totalPct() - 100) < 0.01; 
-}
-```
-
-* Si le total des ingrédients saisis par le formulateur dépasse $100\%$, la fonction `isOver()` passe à `true`, affichant une alerte rouge et calculant l'excès à réduire : `(nonWater() - 100)%`.
+Dans une formulation contenant de l'eau, le formulateur ajoute divers actifs, émulsifiants et huiles, puis "complète à 100%" avec de l'eau.
+* La fonction `nonWater(phases)` additionne tous les pourcentages saisis par l'utilisateur 
+* La fonction `waterPct(phases, formulaType)` calcule le pourcentage d'eau restant :
+  $$\% \text{ Eau} = \text{Max}(0, 100 - \sum \% \text{ des autres ingrédients})$$
+* Si le total des ingrédients (hors eau) dépasse $100.001\%$, l'application passe en état d'erreur (`isOver() = true`), affiche une alerte rouge et indique de combien de pourcentages la formule doit être réduite.
 
 #### B. Conversion des Pourcentages en Grammes
-Le formulateur définit un **poids de lot** (taille de la préparation finale en grammes, par défaut 1000g). La calculette applique instantanément la conversion pour chaque ingrédient ainsi que pour l'eau :
-
-```javascript
-function effectiveWeight() { 
-  return state.totalWeight || 1000; 
-}
-```
-$$\text{Poids de l'ingrédient (g)} = \frac{\text{Poids du lot (g)} \times \% \text{ de l'ingrédient}}{100}$$
+L'utilisateur définit un **poids de lot** (taille de la préparation finale, par défaut 1000g). L'application calcule instantanément le poids en grammes de chaque ligne de la formule :
+$$\text{Poids (g)} = \frac{\text{Poids total du lot (g)} \times \% \text{ de l'ingrédient}}{100}$$
 
 ---
 
 ### 3.2. Le Moteur d'Estimation du pH
 
-Pour anticiper les ajustements de laboratoire, l'application estime en temps réel le pH des formules aqueuses en appliquant des coefficients pondérés selon les pourcentages des ingrédients :
+Pour éviter des formulations dangereuses pour la peau ou les cheveux, l'application estime dynamiquement le pH à l'aide de coefficients de pondération empiriques (fonction `estimatePH()`).
 
-```javascript
-function estimatePH() {
-  const type = FORMULA_TYPES[state.formulaType];
-  if (!type.hasWater) return null;
-  let ph = 6.5; // baseline neutre pour l'eau distillée
-  for (const rows of Object.values(state.phases)) {
-    for (const row of rows) {
-      if (!row.name) continue;
-      const pct = parseFloat(row.pct) || 0;
-      if (!pct) continue;
-      
-      // Impact des régulateurs et acides connus
-      if (row.name.includes("Acide Citrique")) ph -= pct * 7;
-      else if (row.name.includes("Acide Lactique")) ph -= pct * 4;
-      else if (row.name.includes("Acide Benzoïque") || row.name.includes("Acide Sorbique")) ph -= pct * 2;
-      else if (row.name.includes("Hydroxyde de Sodium") || row.name.includes("NaOH")) ph += pct * 10;
-      else if (row.name.includes("Triéthanolamine")) ph += pct * 3;
-      else if (row.name.includes("Acide Salicylique")) ph -= pct * 3;
-      else {
-        // Impact des notes d'ingrédients de la bibliothèque
-        const data = getIngredientData(row.name);
-        if (data && data.phNote) {
-          if (data.phNote.includes("Baisse")) ph -= pct * 1.5;
-          else if (data.phNote.includes("Monte")) ph += pct * 1.5;
-          else if (data.group === "Conservateurs") ph -= pct * 0.15;
-        }
-      }
-    }
-  }
-  // Borne le pH final simulé entre 2.5 et 9.0 pour éviter des résultats aberrants
-  return Math.max(2.5, Math.min(9.0, parseFloat(ph.toFixed(1))));
-}
-```
-
-L'application compare le résultat obtenu à la cible de pH (`phTarget`) du produit fini (ex: $4.5 - 6.0$ pour un spray sans rinçage) via la fonction `getPhStatus()` et génère des conseils d'ajustement.
+* **Base de départ** : Le pH de l'eau distillée est posé par défaut à **6.5**.
+* **Impact des acidifiants** (baissent le pH) :
+  * **Acide Citrique** : $-7.0$ par $\%$ d'ingrédient.
+  * **Acide Lactique** : $-4.0$ par $\%$ d'ingrédient.
+  * **Acide Salicylique** : $-3.0$ par $\%$ d'ingrédient.
+  * **Acide Benzoïque / Acide Sorbique** : $-2.0$ par $\%$ d'ingrédient.
+  * Ingrédients avec la mention "Baisse le pH" : $-1.5$ par $\%$ d'ingrédient.
+* **Impact des alcalinisants** (montent le pH) :
+  * **Hydroxyde de Sodium (NaOH)** : $+10.0$ par $\%$ d'ingrédient.
+  * **Triéthanolamine (TEA)** : $+3.0$ par $\%$ d'ingrédient.
+  * Ingrédients avec la mention "Monte le pH" : $+1.5$ par $\%$ d'ingrédient.
+* **Bornes de sécurité** : Le pH estimé est contraint entre **2.5** (extrêmement acide) et **9.0** (très basique).
+* **Validation des cibles** : Chaque type de formule a une plage cible de pH (ex: $4.0 - 5.5$ pour un après-shampoing). Si l'estimation sort de cette plage, l'application suggère l'ajout d'ajusteurs de pH adaptés.
 
 ---
 
 ### 3.3. Le Moteur de Compatibilité Chimique
 
-L'application intègre un moteur de compatibilité basé sur des règles définies dans le tableau `COMPAT_RULES`. Il valide en temps réel si les ingrédients peuvent coexister :
-
-```javascript
-const COMPAT_RULES = [
-  {
-    groupA: ["BTMS-50", "BTMS-25", "Behentrimonium Chloride", "Honeyquat", "Polyquaternium-7", "Polyquaternium-10", "Guar Cationique", "Protéines Cationiques de Soja"],
-    groupB: ["Texapon N70", "Texapon NSO", "Texapon ASV", "Coco Glucoside", "Decyl Glucoside", "Lauryl Glucoside", "Sodium Cocoyl Isethionate (SCI)", "Sodium Lauryl Sulfoacetate (SLSA)", "Sodium Cocoyl Glutamate", "Sodium Lauroyl Sarcosinate", "Cocamidopropyl Bétaïne (CAPB)"],
-    type: "error", msg: "Ingrédient cationique (+) et anionique (-) ensemble → risque de floculation et déstabilisation de l'émulsion"
-  },
-  {
-    groupA: ["Benzoate de Sodium", "Sorbate de Potassium", "Benzoate + Sorbate (combo)", "Acide Benzoïque", "Acide Sorbique"],
-    groupB: ["__NO_ACID__"],
-    type: "warn", msg: "Benzoate/Sorbate inactifs sans acidifiant — Ajouter Acide Citrique ou Lactique pour descendre le pH sous 5.5"
-  },
-  {
-    groupA: ["Niacinamide"],
-    groupB: ["Acide Citrique", "Acide Lactique"],
-    type: "warn", msg: "Niacinamide + Acide fort → à pH < 4, conversion en niacine irritante. Maintenir pH > 4"
-  },
-  {
-    groupA: ["Phénoxyéthanol"],
-    groupB: ["__HIGH_PH__"],
-    type: "warn", msg: "Phénoxyéthanol perd son efficacité au-dessus de pH 7 — Vérifier le pH de votre formule"
-  },
-  {
-    groupA: ["Zinc PCA"],
-    groupB: ["Protéines de Kératine", "Protéines de Soie", "Protéines de Riz", "Protéines de Blé", "Protéines de Quinoa"],
-    type: "warn", msg: "Zinc PCA + Protéines → Possible compétition ionique. Tester la stabilité"
-  },
-  {
-    groupA: ["Acide Citrique", "Acide Lactique"],
-    groupB: ["Conservateur Leucidal SF", "Conservateur Leucidal Liquid"],
-    type: "warn", msg: "Acide fort + Leucidal → Maintenir pH entre 3.5 et 5.0 pour l'efficacité du conservateur"
-  },
-  {
-    groupA: ["Acide Hyaluronique"],
-    groupB: ["Alcool Cétylique", "Alcool Stéarylique", "Alcool Cétéarylique"],
-    type: "warn", msg: "Acide Hyaluronique + Alcool Gras → Introduire l'AH en phase froide après émulsification"
-  },
-  {
-    groupA: ["HE Bergamote", "HE Citron", "HE Pamplemousse", "HE Orange Douce"],
-    groupB: ["__LEAVE_ON__"],
-    type: "warn", msg: "HE citrus photosensibilisante — Réservée aux formules rincées ou avec filtre UV"
-  }
-];
-```
-
-* **`getConflictingNames()`** : Identifie précisément quels ingrédients saisis posent problème et applique une classe CSS `.conflict-row` pour les surligner en rouge avec un badge `🚨 CONFLIT`.
-* **`checkCompatibility()`** : Parcourt les règles et retourne la liste des avertissements ou erreurs affichés dans le composant de validation en bas de page.
+L'application vérifie en temps réel les règles de formulation suivantes à l'aide du tableau `COMPAT_RULES` :
+1. **Incompatibilité Cationique/Anionique** : Les ingrédients chargés positivement (cationiques, comme le *BTMS-50* ou le *Behentrimonium Chloride*, très utilisés pour démêler les cheveux) réagissent avec les tensioactifs chargés négativement (anioniques, comme le *Texapon N70* dans les shampoings). Leur mélange provoque une floculation (grumeaux) et détruit la formule. L'application lève une erreur visuelle immédiate.
+2. **Inactivation des Conservateurs** : Certains conservateurs naturels (Benzoate de Sodium, Sorbate de Potassium) ne sont actifs que sous forme d'acides non dissociés. Ils nécessitent un environnement acide ($pH < 5.5$). Si le pH estimé est trop élevé, l'application conseille d'ajouter un acide.
+3. **Dégradation de la Niacinamide** : À un pH trop bas ($pH < 4.0$), la Niacinamide (vitamine B3) s'hydrolyse en acide nicotinique, ce qui provoque des rougeurs cutanées (flush). Une alerte invite à maintenir le pH au-dessus de 4.0.
+4. **Efficacité du Phénoxyéthanol** : Ce conservateur perd son action au-dessus de $pH = 7.0$. L'application prévient l'utilisateur s'il formule en milieu trop basique.
 
 ---
 
 ### 3.4. Contrôle des Limites de Dosage (Max Pct)
 
-Chaque ingrédient possède une limite de dosage recommandée dans la bibliothèque. La fonction `checkLimit(name, pct)` s'assure du respect de cette directive :
-* **Dépassement (over)** : Si `pct > maxPct`, elle renvoie `"over"`, provoquant un encadré rouge sur le pourcentage.
-* **Proximité de la limite (near)** : Si `pct >= maxPct * 0.9`, elle renvoie `"near"`, appliquant un indicateur orange de vigilance.
+Chaque ingrédient de la bibliothèque possède une limite de dosage recommandée (ex: max 1% pour les huiles essentielles, max 5% pour le Panthénol). La fonction `checkLimit()` compare le pourcentage saisi par le formulateur à cette limite maximale :
+* Si la dose dépasse le maximum : affiche un badge rouge d'avertissement.
+* Si la dose approche du maximum (à plus de 90 % de la limite) : affiche un badge orange de vigilance.
 
 ---
 
 ### 3.5. Calculateur de Prix de Revient
 
-Si l'utilisateur active l'affichage des **Coûts**, il peut entrer les prix d'achat au kilo de ses matières premières pour évaluer son coût de fabrication en direct :
-
-```javascript
-function calcIngCost(name, pct) {
-  const pricePerKg = parseFloat(state.costs[name]) || 0;
-  if (!pricePerKg) return null;
-  const tw = effectiveWeight();
-  const grams = (tw * (parseFloat(pct) || 0)) / 100;
-  return (pricePerKg / 1000) * grams;
-}
-```
-* **Coût Individuel** : Calcule le coût induit par chaque ingrédient dans le lot :
-  $$\text{Coût} = \frac{\text{Prix au kg} \times \text{Poids utilisé (g)}}{1000}$$
-* **Coût Global du Lot** : Additionne tous les coûts calculés (y compris l'eau distillée si tarifée).
-* **Ratio 100g** : Déduit le coût de revient unitaire standard de la formule pour 100g.
-
----Elle calcule ensuite le coût total du lot en additionnant le coût de toutes les matières premières (l'eau est considérée comme gratuite).
+Lorsque l'utilisateur clique sur le bouton **Coûts**, une colonne "Prix/kg" apparaît pour chaque ingrédient.
+* L'utilisateur saisit le prix d'achat au kilo.
+* L'application calcule le coût individuel de chaque ingrédient :
+  $$\text{Coût de l'ingrédient} = \frac{\text{Prix/kg} \times \text{Poids utilisé (g)}}{1000}$$
+* Elle calcule ensuite le coût total du lot en additionnant le coût de toutes les matières premières (l'eau est considérée comme gratuite).
 
 ---
 
