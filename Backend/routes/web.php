@@ -49,16 +49,19 @@ Route::middleware(['auth'])->group(function () {
         return view('dashboard-admin');
     })->name('dashboard.admin');
 
-    // Routes pour les Formules et Ingrédients
-    Route::post('/formules', [FormuleController::class, 'store'])->name('formules.store');
-    Route::put('/formules/{formule}', [FormuleController::class, 'update'])->name('formules.update');
-    Route::delete('/formules/{formule}', [FormuleController::class, 'destroy'])->name('formules.destroy');
-    
-    Route::post('/ingredients', [IngredientController::class, 'store'])->name('ingredients.store');
-    Route::put('/ingredients/{ingredient}', [IngredientController::class, 'update'])->name('ingredients.update');
-    Route::delete('/ingredients/{ingredient}', [IngredientController::class, 'destroy'])->name('ingredients.destroy');
+    // Routes d'action strictement réservées aux abonnés ACTIFS (Middleware)
+    Route::middleware(['subscribed'])->group(function () {
+        // Routes pour les Formules et Ingrédients
+        Route::post('/formules', [FormuleController::class, 'store'])->name('formules.store');
+        Route::put('/formules/{formule}', [FormuleController::class, 'update'])->name('formules.update');
+        Route::delete('/formules/{formule}', [FormuleController::class, 'destroy'])->name('formules.destroy');
+        
+        Route::post('/ingredients', [IngredientController::class, 'store'])->name('ingredients.store');
+        Route::put('/ingredients/{ingredient}', [IngredientController::class, 'update'])->name('ingredients.update');
+        Route::delete('/ingredients/{ingredient}', [IngredientController::class, 'destroy'])->name('ingredients.destroy');
 
-    Route::post('/messages', [MessageController::class, 'store'])->name('messages.store');
+        Route::post('/messages', [MessageController::class, 'store'])->name('messages.store');
+    });
 
     // Route::get('/calculette', [CalculetteController::class, 'index']);
 });

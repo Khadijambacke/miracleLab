@@ -40,7 +40,7 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        return redirect('/payment');
+        return redirect('/dashboard');
     }
 
     /**
