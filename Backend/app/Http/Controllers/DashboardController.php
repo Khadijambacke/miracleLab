@@ -50,6 +50,13 @@ class DashboardController extends Controller
             return view('dashboard-admin', compact('clients', 'totalUsers', 'totalFormules', 'totalIngredients', 'ingredients', 'chats', 'user'));
         }
 
+        // Vérification d'accès : Seuls les clients avec un abonnement ACTIF (ou les ADMINs) ont accès au laboratoire
+        if ($user->role !== 'ADMIN' && strtoupper($user->statut_abonnement ?? '') !== 'ACTIF') {
+            return redirect()->route('payment')->withErrors([
+                'subscription' => 'L\'accès au laboratoire est réservé aux abonnés. Veuillez effectuer votre paiement de 15 000 FCFA pour activer votre compte.'
+            ]);
+        }
+
         // Pour le client (ou l'admin en mode aperçu client) : Ses propres formules
         $formules = Formule::where('utilisateur_id', $user->id)
                            ->with('formuleIngredients.ingredient')

@@ -720,6 +720,7 @@
       libTab: "AQUEUSE",
       libSearch: "",
       libAdding: false,
+      libEditing: null,
       libNewName: "", libNewNote: "", libNewPhase: "AQUEUSE", libNewGroup: "",
       openDropdown: null,
       dropPos: { top: 0, left: 0, width: 0 },
@@ -764,7 +765,9 @@
           const exists = state.library[phase][groupName].some(item => item.name.toLowerCase() === (ing.nom || '').toLowerCase());
           if (!exists && ing.nom) {
             state.library[phase][groupName].push({
+              id: ing.id,
               name: ing.nom,
+              isCustom: !!ing.est_personnalise,
               note: ing.inci ? `INCI: ${ing.inci}` : (ing.note || "Ingrédient de la base de données"),
               maxPct: ing.max_pct || ing.dosage_max || null
             });
@@ -958,6 +961,7 @@
       ${state.showLibrary ? buildLibraryModal() : ""}
       ${state.showIngSheet ? buildIngredientSheet(state.showIngSheet) : ""}
       ${state.libAdding ? buildAddIngredientModal() : ""}
+      ${state.libEditing ? buildEditIngredientModal() : ""}
       `;
     }
 
@@ -1258,7 +1262,7 @@
             </div>
             ${items.map((ing, i) => {
         const p = PHASES[ing.phase] || PHASES.AQUEUSE;
-        const isCustom = !initNames.has(ing.name);
+        const isCustom = ing.isCustom !== undefined ? ing.isCustom : !initNames.has(ing.name);
         return `
                 <div class="lib-item" style="background:${i % 2 === 0 ? "#fff" : "#FAFAFA"}; border: 1px solid ${p.mid}; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
                 <div class="lib-dot" style="background:${p.color}"></div>
@@ -1273,8 +1277,10 @@
                 ${q ? `<div style="font-size:10px;padding:2px 7px;border-radius:20px;font-weight:700;margin-right:7px;background:${p.light};color:${p.accent}">${p.icon} ${p.short}</div>` : ""}
                 <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
                   ${INGREDIENT_SHEETS[ing.name] ? `<button class="ing-info-btn" data-ingname="${esc(ing.name)}" title="Fiche technique" style="background:#EFF6FF;border:1px solid #BFDBFE;cursor:pointer;color:#3B82F6;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>` : ""}
-                  <button class="edit-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Modifier" style="background:#FFF7ED;border:1px solid #FED7AA;cursor:pointer;color:#F56D13;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-                  <button class="del-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Supprimer" style="background:#FEE2E2;border:none;cursor:pointer;color:#DC2626;font-size:14px;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;">🗑</button>
+                  ${isCustom ? `
+                    <button class="edit-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Modifier" style="background:#FFF7ED;border:1px solid #FED7AA;cursor:pointer;color:#F56D13;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button class="del-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Supprimer" style="background:#FEE2E2;border:none;cursor:pointer;color:#DC2626;font-size:14px;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;">🗑</button>
+                  ` : ""}
                 </div>
               </div>`;
       }).join("")}
@@ -1872,7 +1878,7 @@
               </div>
               ${items.map((ing, i) => {
         const p = PHASES[ing.phase] || PHASES.AQUEUSE;
-        const isCustom = !initNames.has(ing.name);
+        const isCustom = ing.isCustom !== undefined ? ing.isCustom : !initNames.has(ing.name);
         return `
                 <div class="lib-item" style="background:${i % 2 === 0 ? "#fff" : "#FAFAFA"}; border: 1px solid ${p.mid}; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
                   <div class="lib-dot" style="background:${p.color}"></div>
@@ -1887,8 +1893,10 @@
                   ${q ? `<div style="font-size:10px;padding:2px 7px;border-radius:20px;font-weight:700;margin-right:7px;background:${p.light};color:${p.accent}">${p.icon} ${p.short}</div>` : ""}
                   <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
                     ${INGREDIENT_SHEETS[ing.name] ? `<button class="ing-info-btn" data-ingname="${esc(ing.name)}" title="Fiche technique" style="background:#EFF6FF;border:1px solid #BFDBFE;cursor:pointer;color:#3B82F6;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>` : ""}
-                    <button class="edit-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Modifier" style="background:#FFF7ED;border:1px solid #FED7AA;cursor:pointer;color:#F56D13;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-                    <button class="del-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Supprimer" style="background:#FEE2E2;border:none;cursor:pointer;color:#DC2626;font-size:14px;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;">🗑</button>
+                    ${isCustom ? `
+                      <button class="edit-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Modifier" style="background:#FFF7ED;border:1px solid #FED7AA;cursor:pointer;color:#F56D13;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                      <button class="del-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Supprimer" style="background:#FEE2E2;border:none;cursor:pointer;color:#DC2626;font-size:14px;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;">🗑</button>
+                    ` : ""}
                   </div>
                 </div>`;
       }).join("")}
@@ -1973,6 +1981,135 @@
           </div>
         </div>
       </div>`;
+    }
+
+    function buildEditIngredientModal() {
+      const item = state.libEditing;
+      if (!item) return "";
+
+      return `
+      <div class="modal-overlay" id="edit-ing-overlay">
+        <div class="modal-box" style="max-width: 480px; padding: 25px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.15); background:#fff;" onclick="event.stopPropagation()">
+          <h3 style="font-weight: 800; font-size: 18px; color: #1C0F32; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+            ✏️ Modifier l'ingrédient
+          </h3>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 12px; font-weight: 700; color: #8E7E72; margin-bottom: 6px;">Phase de formulation</label>
+            <select class="add-select" id="lib-edit-phase" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #EAE2D8; background: #fff; font-size: 13px; box-sizing: border-box;">
+              ${Object.entries(PHASES).map(([k, p]) => `<option value="${k}" ${item.phase === k ? "selected" : ""}>${p.icon} ${p.label}</option>`).join("")}
+            </select>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 12px; font-weight: 700; color: #8E7E72; margin-bottom: 6px;">Nom de l'ingrédient *</label>
+            <input class="add-input" id="lib-edit-name" placeholder="Ex: Hydrolat de Rose" value="${esc(item.name || "")}" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #EAE2D8; box-sizing: border-box; font-size: 13px;"/>
+          </div>
+          
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; font-size: 12px; font-weight: 700; color: #8E7E72; margin-bottom: 6px;">Propriétés / Description</label>
+            <input class="add-input" id="lib-edit-note" placeholder="Ex: Apaisant, tonifiant..." value="${esc(item.note || "")}" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #EAE2D8; box-sizing: border-box; font-size: 13px;"/>
+          </div>
+          
+          <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button class="btn-confirm" id="lib-edit-confirm" style="background:#F56D13; color:#fff; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 13px;">
+              Enregistrer
+            </button>
+            <button class="btn-cancel" id="lib-edit-cancel" style="background: #F1EBE3; color: #8E7E72; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 13px;">
+              Annuler
+            </button>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    function openEditModal(phase, name) {
+      const groups = state.library[phase];
+      if (!groups) return;
+
+      let foundItem = null;
+      for (const g of Object.keys(groups)) {
+        const item = (groups[g] || []).find(i => i.name === name);
+        if (item) {
+          foundItem = { ...item, oldPhase: phase, oldName: name };
+          break;
+        }
+      }
+
+      if (foundItem) {
+        state.libEditing = foundItem;
+        render();
+      }
+    }
+
+    function saveEditedIngredient() {
+      const item = state.libEditing;
+      if (!item) return;
+
+      const nameEl = document.getElementById("lib-edit-name");
+      const noteEl = document.getElementById("lib-edit-note");
+      const phaseEl = document.getElementById("lib-edit-phase");
+
+      const newName = (nameEl ? nameEl.value : item.name).trim();
+      if (!newName) return;
+
+      const newNote = (noteEl ? noteEl.value : item.note).trim();
+      const newPhase = (phaseEl ? phaseEl.value : item.phase) || item.phase;
+
+      const oldPhase = item.oldPhase || item.phase;
+      const oldName = item.oldName || item.name;
+
+      let targetId = item.id;
+      if (state.library[oldPhase]) {
+        for (const g of Object.keys(state.library[oldPhase])) {
+          const ex = (state.library[oldPhase][g] || []).find(i => i.name === oldName);
+          if (ex && ex.id) targetId = ex.id;
+          state.library[oldPhase][g] = (state.library[oldPhase][g] || []).filter(i => i.name !== oldName);
+        }
+      }
+
+      if (!state.library[newPhase]) {
+        state.library[newPhase] = {};
+      }
+      const groupKey = "✨ Mes Ingrédients Personnalisés";
+      if (!state.library[newPhase][groupKey]) {
+        state.library[newPhase][groupKey] = [];
+      }
+
+      const updatedItem = {
+        id: targetId,
+        name: newName,
+        phase: newPhase,
+        note: newNote || "Ingrédient personnalisé",
+        isCustom: true
+      };
+
+      state.library[newPhase][groupKey].unshift(updatedItem);
+      state.libTab = newPhase;
+      state.libSearch = "";
+
+      if (targetId) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (csrfToken) {
+          fetch(`/ingredients/${targetId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrfToken,
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+              nom: newName,
+              phase: newPhase,
+              inci: newNote || null
+            })
+          }).catch(err => console.error('Erreur mise à jour ingrédient:', err));
+        }
+      }
+
+      state.libEditing = null;
+      showToast("✅ Ingrédient mis à jour !");
+      render();
     }
 
     function buildDropdownPanel() {
@@ -2612,13 +2749,37 @@
     }
 
     function addToLibrary() {
-      const n = state.libNewName.trim();
+      const nameEl = document.getElementById("lib-new-name");
+      const noteEl = document.getElementById("lib-new-note");
+      const phaseEl = document.getElementById("lib-new-phase");
+
+      const n = (nameEl ? nameEl.value : state.libNewName).trim();
       if (!n) return;
-      const ph = state.libNewPhase || state.libTab;
+
+      const noteText = (noteEl ? noteEl.value : state.libNewNote).trim();
+      const ph = (phaseEl ? phaseEl.value : state.libNewPhase) || state.libTab || 'AQUEUSE';
+
+      if (!state.library[ph]) {
+        state.library[ph] = {};
+      }
+
       const groups = state.library[ph];
       const groupKey = "✨ Mes Ingrédients Personnalisés";
       if (!groups[groupKey]) groups[groupKey] = [];
-      groups[groupKey].unshift({ name: n, note: state.libNewNote.trim() || "Ingrédient personnalisé" });
+
+      const newItem = {
+        name: n,
+        phase: ph,
+        note: noteText || "Ingrédient personnalisé",
+        isCustom: true
+      };
+
+      // Placer tout en haut de la liste du groupe d'ingrédients personnalisés de la phase
+      groups[groupKey].unshift(newItem);
+
+      // Basculer directement sur l'onglet de la phase sélectionnée et réinitialiser la recherche
+      state.libTab = ph;
+      state.libSearch = "";
 
       // Save to Backend Database asynchronously
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -2633,9 +2794,16 @@
           body: JSON.stringify({
             nom: n,
             phase: ph,
-            inci: state.libNewNote.trim() || null
+            inci: noteText || null
           })
-        }).catch(err => console.log('Ingrédient sauvegardé localement:', err));
+        })
+        .then(r => r.json())
+        .then(data => {
+          if (data.ingredient && data.ingredient.id) {
+            newItem.id = data.ingredient.id;
+          }
+        })
+        .catch(err => console.log('Ingrédient sauvegardé localement:', err));
       }
 
       state.libNewName = ""; state.libNewNote = ""; state.libAdding = false;
@@ -2645,10 +2813,27 @@
 
     function deleteFromLibrary(phase, name) {
       const groups = state.library[phase];
+      let targetId = null;
+
       for (const g of Object.keys(groups)) {
+        const item = (groups[g] || []).find(i => i.name === name);
+        if (item && item.id) targetId = item.id;
         groups[g] = groups[g].filter(i => i.name !== name);
       }
       render();
+
+      if (targetId) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (csrfToken) {
+          fetch(`/ingredients/${targetId}`, {
+            method: 'DELETE',
+            headers: {
+              'X-CSRF-TOKEN': csrfToken,
+              'Accept': 'application/json'
+            }
+          }).catch(err => console.error('Erreur suppression ingrédient:', err));
+        }
+      }
     }
 
     // 3. Event bindings
@@ -2903,6 +3088,11 @@
         libSearchEl.addEventListener("blur", () => render());
       }
       document.querySelectorAll(".del-lib-btn").forEach(el => el.addEventListener("click", e => deleteFromLibrary(e.currentTarget.dataset.libphase, e.currentTarget.dataset.libname)));
+      document.querySelectorAll(".edit-lib-btn").forEach(el => el.addEventListener("click", e => openEditModal(e.currentTarget.dataset.libphase, e.currentTarget.dataset.libname)));
+      document.getElementById("lib-edit-confirm")?.addEventListener("click", saveEditedIngredient);
+      document.getElementById("lib-edit-cancel")?.addEventListener("click", () => { state.libEditing = null; render(); });
+      document.getElementById("edit-ing-overlay")?.addEventListener("mousedown", e => { if (e.target.id === "edit-ing-overlay") { state.libEditing = null; render(); } });
+
       document.querySelectorAll(".ing-info-btn").forEach(el => el.addEventListener("click", e => { e.stopPropagation(); state.showIngSheet = e.currentTarget.dataset.ingname; render(); }));
       document.getElementById("sheet-close")?.addEventListener("click", () => { state.showIngSheet = null; render(); });
       document.getElementById("sheet-overlay")?.addEventListener("mousedown", e => { if (e.target.id === "sheet-overlay") { state.showIngSheet = null; render(); } });
