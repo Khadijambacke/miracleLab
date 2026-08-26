@@ -18,7 +18,21 @@
       <a class="nav-link" id="nav-pricing">S'abonner</a>
       <button class="btn-login" id="btn-goto-login">Connexion</button>
     </div>
+    <!-- Hamburger (visible mobile/tablet only via CSS) -->
+    <button class="landing-hamburger" id="landing-hamburger" aria-label="Menu">☰</button>
   </nav>
+
+  <!-- Mobile Drawer Menu -->
+  <div class="landing-mobile-menu" id="landing-mobile-menu">
+    <div class="landing-mobile-drawer">
+      <button class="landing-mobile-close" id="landing-mobile-close" aria-label="Fermer">✕</button>
+      <a class="landing-mobile-link" href="#features-section">Fonctionnalités</a>
+      <a class="landing-mobile-link" href="#roadmap-section">Comment ça marche</a>
+      <a class="landing-mobile-link" href="#pricing-section">S'abonner</a>
+      <a class="landing-mobile-cta" href="/login">Connexion</a>
+      <a class="landing-mobile-cta" href="/register" style="background:#FFD700; color:#1A1A00; box-shadow: 0 4px 12px rgba(255,215,0,0.3);">Accéder au Miracle Lab</a>
+    </div>
+  </div>
 
   <header class="hero-section">
     <span class="hero-tag">Laboratoire Révolutionnaire</span>
@@ -128,6 +142,27 @@
     document.getElementById("nav-pricing")?.addEventListener("click", () => { document.getElementById("pricing-section")?.scrollIntoView({ behavior: 'smooth' }); });
     document.getElementById("btn-hero-cta")?.addEventListener("click", () => { window.location.href = "/register"; });
     document.getElementById("btn-pricing-buy")?.addEventListener("click", () => { window.location.href = "/register"; });
+
+    // Mobile Hamburger Menu
+    const hamburger = document.getElementById("landing-hamburger");
+    const mobileMenu = document.getElementById("landing-mobile-menu");
+    const mobileClose = document.getElementById("landing-mobile-close");
+    
+    hamburger?.addEventListener("click", () => { mobileMenu?.classList.add("open"); });
+    mobileClose?.addEventListener("click", () => { mobileMenu?.classList.remove("open"); });
+    mobileMenu?.addEventListener("click", (e) => { if (e.target === mobileMenu) mobileMenu.classList.remove("open"); });
+
+    // Close drawer when clicking a link and scroll smoothly
+    document.querySelectorAll(".landing-mobile-link").forEach(link => {
+      link.addEventListener("click", (e) => {
+        mobileMenu?.classList.remove("open");
+        const href = link.getAttribute("href");
+        if (href && href.startsWith("#")) {
+          e.preventDefault();
+          document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
   </script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>

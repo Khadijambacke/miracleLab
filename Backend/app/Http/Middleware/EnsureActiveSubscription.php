@@ -18,10 +18,16 @@ class EnsureActiveSubscription
     {
         $user = Auth::user();
 
-        // Les ADMINS bypassent le blocage
-        // Les clients avec statut ACTIF passent
-        if ($user && ($user->role === 'ADMIN' || strtoupper($user->statut_abonnement ?? '') === 'ACTIF')) {
-            return $next($request);
+        if ($user) {
+            if ($user->role === 'ADMIN' || $user->estAbonnementValide()) {
+                return $next($request);
+            }
+
+            // Si l'abonnement a expiré, on met à jour le statut en base de données
+            if (strtoupper($user->statut_abonnement ?? '') === 'ACTIF' && $user->date_expiration_abonnement && now()->greaterThan($user->date_expiration_abonnement)) {
+                $user->statut_abonnement = 'INACTIF';
+                $user->save();
+            }
         }
 
         // Si c'est une requête API ou Ajax (Fetch), on renvoie une erreur JSON 403 Forbidden

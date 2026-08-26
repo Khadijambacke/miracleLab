@@ -47,7 +47,7 @@ Route::middleware(['auth'])->group(function () {
     // Les vues directes pour admin/client si besoin, mais l'idéal est de passer par le dashboard unifié
     Route::get('/admin', function () {
         return view('dashboard-admin');
-    })->name('dashboard.admin');
+    })->middleware('admin')->name('dashboard.admin');
 
     // Routes d'action strictement réservées aux abonnés ACTIFS (Middleware)
     Route::middleware(['subscribed'])->group(function () {

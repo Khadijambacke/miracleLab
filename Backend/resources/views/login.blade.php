@@ -41,17 +41,10 @@
           <label class="auth-label" for="password">Mot de passe</label>
           <input class="auth-input-field" id="password" name="password" type="password" placeholder="••••••••" required />
         </div>
-        <button type="submit" class="btn-auth-submit">Se connecter</button>
+        <button type="submit" class="btn-auth-submit" style="margin-top: 15px;">Se connecter</button>
       </form>
 
       <a href="/register" class="auth-footer-link" style="display:block; margin-top:20px; text-align:center;">Pas encore membre ? S'inscrire</a>
-
-      <div
-        style="background:#F3F4F6; border-radius: 12px; padding:14px; font-size:11px; color:#4B5563; line-height:1.5; margin-top: 15px;">
-        💡 <b>Comptes de démo :</b><br />
-        • Client : <code>awa.diop@example.com</code> (mdp: <code>client123</code>)<br />
-        • Admin : <code>admin@example.com</code> (mdp: <code>admin123</code>)
-      </div>
     </div>
   </div>
 

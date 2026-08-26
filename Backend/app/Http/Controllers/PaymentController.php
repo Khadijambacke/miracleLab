@@ -28,6 +28,60 @@ class PaymentController extends Controller
     }
 
     /**
+     * Obtient les détails d'un plan d'abonnement selon son code
+     */
+    private function getPlanInfo(string $plan): array
+    {
+        $planUpper = strtoupper($plan);
+        return match ($planUpper) {
+            '3_MOIS', 'TRIMESTRIEL', '3' => [
+                'type_plan' => 'TRIMESTRIEL',
+                'amount' => 5900.00,
+                'months' => 3,
+                'label' => '3 Mois (5 900 FCFA)',
+            ],
+            '12_MOIS', '1_AN', 'ANNUEL', '12' => [
+                'type_plan' => 'ANNUEL',
+                'amount' => 17900.00,
+                'months' => 12,
+                'label' => '1 An (17 900 FCFA)',
+            ],
+            default => [
+                'type_plan' => 'MENSUEL',
+                'amount' => 2900.00,
+                'months' => 1,
+                'label' => '1 Mois (2 900 FCFA)',
+            ],
+        };
+    }
+
+    /**
+     * Active ou prolonge l'abonnement de l'utilisateur
+     */
+    private function activateUserSubscription(Utilisateur $user, string $typePlan, ?int $months = null): void
+    {
+        if ($months === null) {
+            $months = match ($typePlan) {
+                'TRIMESTRIEL' => 3,
+                'ANNUEL' => 12,
+                default => 1,
+            };
+        }
+
+        $user->statut_abonnement = 'ACTIF';
+        $user->type_plan = $typePlan;
+
+        // Si l'utilisateur possède déjà une date d'expiration valide dans le futur, on prolonge (cumul)
+        if ($user->date_expiration_abonnement && now()->lessThan($user->date_expiration_abonnement)) {
+            $user->date_expiration_abonnement = $user->date_expiration_abonnement->addMonths($months);
+        } else {
+            $user->date_expiration_abonnement = now()->addMonths($months);
+        }
+
+        $user->save();
+    }
+
+    /**
      * Initialise le paiement via l'API Intech (Cash-In Mobile Money)
      */
     public function processPayment(Request $request)
@@ -43,8 +97,11 @@ class PaymentController extends Controller
 
         $request->validate([
             'phone' => 'required|string',
-            'payment_method' => 'required|string|in:wave,om,free,expresso'
+            'payment_method' => 'required|string|in:wave,om,free,expresso',
+            'plan' => 'nullable|string',
         ]);
+
+        $planInfo = $this->getPlanInfo($request->input('plan', '1_mois'));
 
         // Nettoyage du numéro de téléphone
         $phone = preg_replace('/[^0-9]/', '', $request->input('phone'));
@@ -61,7 +118,7 @@ class PaymentController extends Controller
         ];
 
         $codeService = $codeServices[$request->input('payment_method')] ?? 'WAVE_SN_API_CASH_IN';
-        $amount = 15000.00; // Montant réclamé pour l'abonnement
+        $amount = $planInfo['amount'];
         $reference = 'MM_' . strtoupper(uniqid());
         $callbackUrl = route('intech.callback');
 
@@ -69,6 +126,7 @@ class PaymentController extends Controller
         $paiement = Paiement::create([
             'utilisateur_id' => $user->id,
             'montant' => $amount,
+            'type_plan' => $planInfo['type_plan'],
             'statut' => 'EN_ATTENTE',
             'methode_paiement' => strtoupper($request->input('payment_method')),
             'reference_transaction' => $reference,
@@ -79,15 +137,14 @@ class PaymentController extends Controller
 
         // Mode Test / Démo local si la clé est de test ou en environnement local
         if (empty($apiKey) || str_contains(strtoupper($apiKey), 'TEST') || str_contains(strtoupper($apiKey), 'DEMO')) {
-            $user->statut_abonnement = 'ACTIF';
-            $user->save();
+            $this->activateUserSubscription($user, $planInfo['type_plan'], $planInfo['months']);
 
             $paiement->statut = 'REUSSI';
             $paiement->save();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Paiement de 15 000 FCFA validé avec succès (Mode Test Intech API) ! Redirection...',
+                'message' => 'Paiement (' . number_format($amount, 0, ',', ' ') . ' FCFA) validé avec succès (Mode Test Intech API) ! Redirection...',
                 'reference' => $reference,
                 'status' => 'REUSSI'
             ]);
@@ -136,8 +193,7 @@ class PaymentController extends Controller
             
             // Mode fallback simulation si l'API Intech n'est pas encore configurée avec les vraies clés
             if (empty($apiKey) || env('APP_ENV') === 'local') {
-                $user->statut_abonnement = 'ACTIF';
-                $user->save();
+                $this->activateUserSubscription($user, $planInfo['type_plan'], $planInfo['months']);
 
                 $paiement->statut = 'REUSSI';
                 $paiement->save();
@@ -164,45 +220,54 @@ class PaymentController extends Controller
     {
         Log::info('Intech Callback Received:', $request->all());
 
-        // Récupération des données du callback
         $transactionId = $request->input('transactionId') ?? $request->input('externalId');
         $status = strtoupper($request->input('status') ?? '');
         $amount = floatval($request->input('amount') ?? 0);
-        $providedHash = $request->header('X-Intech-Signature') ?? $request->input('sha256') ?? '';
 
-        // Vérification de la transaction en base de données
-        $paiement = Paiement::where('reference_transaction', $transactionId)->first();
-        if (!$paiement) {
-            return response()->json(['status' => 'FAILED', 'message' => 'Transaction introuvable'], 404);
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($transactionId, $amount, $status) {
+                $paiement = Paiement::where('reference_transaction', $transactionId)->lockForUpdate()->first();
+                
+                if (!$paiement) {
+                    throw new \Exception('Transaction introuvable');
+                }
+
+                // Idempotence : si le paiement est déjà traité, on ne fait rien
+                if (in_array($paiement->statut, ['REUSSI', 'ECHOUE', 'ANNULE'])) {
+                    return; 
+                }
+
+                // Vérification stricte du montant
+                if ($amount != $paiement->montant) {
+                    Log::warning('Intech Callback Amount Mismatch:', ['expected' => $paiement->montant, 'received' => $amount]);
+                    $paiement->statut = 'ECHOUE';
+                    $paiement->save();
+                    throw new \Exception('Montant incorrect');
+                }
+
+                // Traitement selon le statut
+                if (in_array($status, ['SUCCESS', 'SUCCESSFUL', 'REUSSI', 'COMPLETED'])) {
+                    $paiement->statut = 'REUSSI';
+                    $paiement->date_paiement = now();
+                    $paiement->save();
+
+                    $user = Utilisateur::find($paiement->utilisateur_id);
+                    if ($user) {
+                        $this->activateUserSubscription($user, $paiement->type_plan ?? 'MENSUEL');
+                    }
+                } else if (in_array($status, ['FAILED', 'ECHOUE', 'CANCELLED'])) {
+                    $paiement->statut = 'ECHOUE';
+                    $paiement->save();
+                }
+            });
+
+            return response()->json(['status' => 'SUCCESS'], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Intech Callback Error: ' . $e->getMessage());
+            $code = $e->getMessage() === 'Transaction introuvable' ? 404 : 400;
+            return response()->json(['status' => 'FAILED', 'message' => $e->getMessage()], $code);
         }
-
-        // Vérification du montant (doit être exactement égal au montant demandé 15000 FCFA)
-        if ($amount > 0 && $amount < $paiement->montant) {
-            Log::warning('Intech Callback Amount Mismatch:', ['expected' => $paiement->montant, 'received' => $amount]);
-            $paiement->statut = 'ECHOUE';
-            $paiement->save();
-            return response()->json(['status' => 'FAILED', 'message' => 'Montant incorrect'], 400);
-        }
-
-        // Si le statut envoyé est un succès
-        if ($status === 'SUCCESS' || $status === 'SUCCESSFUL' || $status === 'REUSSI' || $status === 'COMPLETED') {
-            $paiement->statut = 'REUSSI';
-            $paiement->date_paiement = now();
-            $paiement->save();
-
-            // Activation de l'abonnement client
-            $user = Utilisateur::find($paiement->utilisateur_id);
-            if ($user) {
-                $user->statut_abonnement = 'ACTIF';
-                $user->save();
-            }
-        } else if ($status === 'FAILED' || $status === 'ECHOUE' || $status === 'CANCELLED') {
-            $paiement->statut = 'ECHOUE';
-            $paiement->save();
-        }
-
-        // Intech exige un retour HTTP 200 (Note 4 de la documentation officielle Intech API)
-        return response()->json(['status' => 'SUCCESS'], 200);
     }
 
     /**
@@ -214,6 +279,10 @@ class PaymentController extends Controller
 
         if (!$paiement) {
             return response()->json(['success' => false, 'message' => 'Transaction introuvable'], 404);
+        }
+
+        if (Auth::check() && $paiement->utilisateur_id !== Auth::id() && Auth::user()->role !== 'ADMIN') {
+            abort(403, 'Accès non autorisé à cette transaction.');
         }
 
         // Si la transaction est déjà marquée réussie en base
@@ -245,8 +314,7 @@ class PaymentController extends Controller
 
                         $user = Utilisateur::find($paiement->utilisateur_id);
                         if ($user) {
-                            $user->statut_abonnement = 'ACTIF';
-                            $user->save();
+                            $this->activateUserSubscription($user, $paiement->type_plan ?? 'MENSUEL');
                         }
 
                         return response()->json([
@@ -283,42 +351,48 @@ class PaymentController extends Controller
             ], 401);
         }
 
+        $request->validate([
+            'plan' => 'nullable|string',
+        ]);
+
+        $planInfo = $this->getPlanInfo($request->input('plan', '1_mois'));
+
         $env = config('services.paytech.env', 'test');
         $apiKey = config('services.paytech.api_key', '');
         $apiSecret = config('services.paytech.api_secret', '');
 
-        // En mode sandbox, on peut tester avec un montant réduit (100 FCFA)
-        // En production ce sera 15000 FCFA
-        $amount = ($env === 'test') ? 100 : 15000;
+        // En mode sandbox test PayTech, on peut tester avec un montant réduit (100 FCFA) si besoin
+        $amount = ($env === 'test') ? 100 : $planInfo['amount'];
         $refCommand = 'MM_' . strtoupper(uniqid());
 
         // Créer l'enregistrement de paiement en attente
         $paiement = Paiement::create([
             'utilisateur_id' => $user->id,
-            'montant' => $amount,
+            'montant' => $planInfo['amount'],
+            'type_plan' => $planInfo['type_plan'],
             'statut' => 'EN_ATTENTE',
             'methode_paiement' => 'PAYTECH',
             'reference_transaction' => $refCommand,
             'date_paiement' => now(),
         ]);
 
-        // Construire les URLs avec APP_URL (pas route() qui utilise le host du serveur local)
+        // Construire les URLs avec APP_URL
         $baseUrl    = rtrim(config('app.url'), '/');
         $successUrl = $baseUrl . '/payment/success?ref=' . $refCommand;
         $cancelUrl  = $baseUrl . '/payment/cancel?ref=' . $refCommand;
         $ipnUrl     = $baseUrl . '/paytech/ipn';
 
         $payload = [
-            'item_name'    => 'Abonnement Laboratoire Miss Miracle',
+            'item_name'    => 'Abonnement ' . $planInfo['label'] . ' - Miss Miracle',
             'item_price'   => $amount,
             'currency'     => 'XOF',
             'ref_command'  => $refCommand,
-            'command_name' => ($env === 'test' ? '[TEST] ' : '') . 'Abonnement Lab Miss Miracle',
+            'command_name' => ($env === 'test' ? '[TEST] ' : '') . 'Abonnement ' . $planInfo['label'],
             'env'          => $env,
             'ipn_url'      => $ipnUrl,
             'success_url'  => $successUrl,
             'cancel_url'   => $cancelUrl,
-            'custom_field' => json_encode(['user_id' => $user->id]),
+            'custom_field' => json_encode(['user_id' => $user->id, 'type_plan' => $planInfo['type_plan']]),
         ];
 
         Log::info('PayTech — Envoi requête', [
@@ -327,7 +401,7 @@ class PaymentController extends Controller
             'payload' => $payload,
         ]);
 
-        // Appel à l'API PayTech (SSL verify désactivé en local Windows)
+        // Appel à l'API PayTech
         try {
             $response = Http::withHeaders([
                 'API_KEY'      => $apiKey,
@@ -382,20 +456,49 @@ class PaymentController extends Controller
 
         $typeEvent = $request->input('type_event');
         $refCommand = $request->input('ref_command');
+        $amount = floatval($request->input('item_price') ?? 0);
 
-        // Vérification du paiement
         if ($typeEvent === 'sale_complete') {
-            $paiement = Paiement::where('reference_transaction', $refCommand)->first();
-            if ($paiement) {
-                $paiement->statut = 'REUSSI';
-                $paiement->date_paiement = now();
-                $paiement->save();
+            try {
+                $result = \Illuminate\Support\Facades\DB::transaction(function () use ($refCommand, $amount) {
+                    $paiement = Paiement::where('reference_transaction', $refCommand)->lockForUpdate()->first();
+                    
+                    if (!$paiement) {
+                        throw new \Exception('Transaction introuvable');
+                    }
 
-                $user = Utilisateur::find($paiement->utilisateur_id);
-                if ($user) {
-                    $user->statut_abonnement = 'ACTIF';
-                    $user->save();
+                    // Idempotence
+                    if (in_array($paiement->statut, ['REUSSI', 'ECHOUE', 'ANNULE'])) {
+                        return ['status' => 'SUCCESS'];
+                    }
+
+                    $paiement->statut = 'REUSSI';
+                    $paiement->date_paiement = now();
+                    $paiement->save();
+
+                    $user = Utilisateur::find($paiement->utilisateur_id);
+                    if ($user) {
+                        $this->activateUserSubscription($user, $paiement->type_plan ?? 'MENSUEL');
+                    }
+                    
+                    return ['status' => 'SUCCESS'];
+                });
+
+                if (isset($result['status']) && $result['status'] === 'FAILED') {
+                    return response()->json(['status' => 'FAILED', 'message' => $result['message']], 400);
                 }
+
+                return response()->json(['status' => 'SUCCESS'], 200);
+
+            } catch (\Exception $e) {
+                Log::error('PayTech IPN Error: ' . $e->getMessage());
+                return response()->json(['status' => 'FAILED', 'message' => $e->getMessage()], 400);
+            }
+        } else if ($typeEvent === 'sale_canceled') {
+            $paiement = Paiement::where('reference_transaction', $refCommand)->first();
+            if ($paiement && $paiement->statut !== 'REUSSI') {
+                $paiement->statut = 'ANNULE';
+                $paiement->save();
             }
         }
 
@@ -403,28 +506,20 @@ class PaymentController extends Controller
     }
 
     /**
-     * Succès du paiement PayTech (Redirection Client)
+     * Succès du paiement PayTech
      */
     public function paytechSuccess(Request $request)
     {
         $ref = $request->query('ref');
-        $user = Auth::user();
-
-        if ($user) {
-            $user->statut_abonnement = 'ACTIF';
-            $user->save();
-        }
-
+        
         if ($ref) {
             $paiement = Paiement::where('reference_transaction', $ref)->first();
-            if ($paiement) {
-                $paiement->statut = 'REUSSI';
-                $paiement->date_paiement = now();
-                $paiement->save();
+            if ($paiement && Auth::check() && $paiement->utilisateur_id !== Auth::id() && Auth::user()->role !== 'ADMIN') {
+                abort(403, 'Accès non autorisé à cette transaction.');
             }
         }
-
-        return redirect()->route('dashboard')->with('success', '🎉 Paiement effectué avec succès via PayTech Sandbox ! Bienvenue dans votre laboratoire.');
+        
+        return view('payment-close-popup');
     }
 
     /**
@@ -436,12 +531,17 @@ class PaymentController extends Controller
         if ($ref) {
             $paiement = Paiement::where('reference_transaction', $ref)->first();
             if ($paiement) {
-                $paiement->statut = 'ECHOUE';
-                $paiement->save();
+                if (Auth::check() && $paiement->utilisateur_id !== Auth::id() && Auth::user()->role !== 'ADMIN') {
+                    abort(403, 'Accès non autorisé à cette transaction.');
+                }
+                
+                if ($paiement->statut !== 'REUSSI') {
+                    $paiement->statut = 'ANNULE';
+                    $paiement->save();
+                }
             }
         }
 
-        return redirect()->route('payment')->withErrors(['subscription' => 'Paiement PayTech annulé. Veuillez réespayer pour activer votre laboratoire.']);
+        return view('payment-close-popup');
     }
 }
-
