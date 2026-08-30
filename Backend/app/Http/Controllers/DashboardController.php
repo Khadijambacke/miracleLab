@@ -106,8 +106,12 @@ class DashboardController extends Controller
             return view('dashboard-admin', compact('clients', 'totalUsers', 'totalFormules', 'totalIngredients', 'ingredients', 'chats', 'user', 'stats'));
         }
 
-        // Vérification d'accès strict : Si inactif, on ne charge AUCUNE donnée du dashboard. On retourne juste la vue de paiement bloquante.
-        if ($user->role !== 'ADMIN' && strtoupper($user->statut_abonnement ?? '') !== 'ACTIF') {
+        // Vérification d'accès : Si l'abonnement/essai gratuit n'est plus valide, on affiche la vue de paiement bloquante.
+        if ($user->role !== 'ADMIN' && !$user->estAbonnementValide()) {
+            if (strtoupper($user->statut_abonnement ?? '') === 'ACTIF' && $user->date_expiration_abonnement && now()->greaterThan($user->date_expiration_abonnement)) {
+                $user->statut_abonnement = 'INACTIF';
+                $user->save();
+            }
             return view('payment', ['needsPayment' => true]);
         }
 
