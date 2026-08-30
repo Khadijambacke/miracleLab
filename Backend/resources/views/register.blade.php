@@ -51,7 +51,7 @@
             <input class="auth-input-field" name="password_confirmation" type="password" placeholder="••••••••" required/>
             </div>
         </div>
-        <button type="submit" class="btn-auth-submit" style="margin-top: 15px;">S'inscrire et payer (15 000 FCFA)</button>
+        <button type="submit" class="btn-auth-submit" style="margin-top: 15px;">S'inscrire (Essai gratuit 3 jours)</button>
       </form>
       <a href="{{ route('login') }}" class="auth-footer-link" style="display:block; margin-top:20px; text-align:center;">Déjà inscrit ? Se connecter</a>
     </div>

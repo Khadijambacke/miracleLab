@@ -96,9 +96,11 @@ class PaymentController extends Controller
         }
 
         $request->validate([
-            'phone' => 'required|string',
+            'phone' => ['required', 'string', 'regex:/^(?:(?:\+221|00221|221)?[\s.-]?)?(7[05678][0-9]{7})$/'],
             'payment_method' => 'required|string|in:wave,om,free,expresso',
             'plan' => 'nullable|string',
+        ], [
+            'phone.regex' => 'Le numéro de téléphone doit être un numéro valide du Sénégal (77, 78, 70, 76, 75).',
         ]);
 
         $planInfo = $this->getPlanInfo($request->input('plan', '1_mois'));

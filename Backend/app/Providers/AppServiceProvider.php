@@ -19,10 +19,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (config('app.env') !== 'local' || request()->server('HTTP_X_FORWARDED_PROTO') == 'https') {
-            \Illuminate\Support\Facades\URL::forceScheme('https');
-        } else {
-            // Force https for ngrok universally to prevent Mixed Content
+        if (str_starts_with(config('app.url', ''), 'https://') || request()->server('HTTP_X_FORWARDED_PROTO') === 'https') {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
     }

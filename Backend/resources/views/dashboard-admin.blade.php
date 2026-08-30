@@ -347,7 +347,7 @@
             <span style="font-size: 28px; font-weight: 800; color: #1C0F32; letter-spacing: -0.5px;">${totalRev.toLocaleString('fr-FR')}</span>
             <span style="font-size: 14px; font-weight: 600; color: #8E7E72;">FCFA</span>
           </div>
-          <div style="font-size: 11.5px; color: #8E7E72;">${activeCount} abonné(s) actif(s) × 15 000 FCFA</div>
+          <div style="font-size: 11.5px; color: #8E7E72;">${activeCount} abonné(s) actif(s)</div>
         </div>
 
         <!-- Active Clients Card -->

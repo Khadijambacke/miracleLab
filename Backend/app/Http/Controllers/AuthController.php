@@ -25,8 +25,10 @@ class AuthController extends Controller
         $validated = $request->validate([
             'nom_complet' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:utilisateurs'],
-            'telephone' => ['nullable', 'string', 'max:20'],
+            'telephone' => ['required', 'string', 'regex:/^(?:(?:\+221|00221|221)?[\s.-]?)?(7[05678][0-9]{7})$/'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ], [
+            'telephone.regex' => 'Le numéro de téléphone doit être un numéro valide du Sénégal (77, 78, 70, 76, 75).',
         ]);
 
         $user = Utilisateur::create([

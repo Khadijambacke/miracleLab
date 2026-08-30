@@ -28,7 +28,7 @@ class DashboardController extends Controller
             // ── Real Stats ───────────────────────────────────────────────────
             $activeUsers  = $clients->filter(fn($c) => strtoupper($c->statut_abonnement ?? '') === 'ACTIF')->count();
             $inactiveUsers = $totalUsers - $activeUsers;
-            $realRevenue  = $activeUsers * 15000; // 15 000 FCFA par abonné actif
+            $realRevenue  = (float) \App\Models\Paiement::where('statut', 'REUSSI')->sum('montant');
             $conversionRate = $totalUsers > 0 ? round(($activeUsers / $totalUsers) * 100) : 0;
 
             // Formules par catégorie
