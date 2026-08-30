@@ -19,6 +19,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"
     rel="stylesheet">
   <!-- Lucide Icons -->
+  <!-- PDF.js for PDF import -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
     /* Client dashboard — non-sidebar component overrides only */
@@ -721,6 +728,7 @@
       libSearch: "",
       libAdding: false,
       libNewName: "", libNewNote: "", libNewPhase: "AQUEUSE", libNewGroup: "",
+      showTypeDropdown: false,
       openDropdown: null,
       dropPos: { top: 0, left: 0, width: 0 },
       ddSearch: "",
@@ -756,18 +764,59 @@
             state.library[phase] = {};
           }
           
-          const groupName = ing.est_personnalise ? "✨ Mes Ingrédients Personnalisés" : "📦 Base de Données";
-          if (!state.library[phase][groupName]) {
-            state.library[phase][groupName] = [];
+          const groupName = ing.est_personnalise 
+            ? "✨ Mes Ingrédients Personnalisés" 
+            : (ing.nom_groupe || "📦 Base de Données");
+
+          // Check if ingredient already exists in ANY group of this phase
+          let exists = false;
+          for (const g of Object.keys(state.library[phase])) {
+            if (state.library[phase][g].some(item => item.name.toLowerCase() === (ing.nom || '').toLowerCase())) {
+              exists = true;
+              break;
+            }
           }
 
-          const exists = state.library[phase][groupName].some(item => item.name.toLowerCase() === (ing.nom || '').toLowerCase());
           if (!exists && ing.nom) {
+            if (!state.library[phase][groupName]) {
+              state.library[phase][groupName] = [];
+            }
             state.library[phase][groupName].push({
+              id: ing.id,
               name: ing.nom,
+              isCustom: !!ing.est_personnalise,
               note: ing.inci ? `INCI: ${ing.inci}` : (ing.note || "Ingrédient de la base de données"),
-              maxPct: ing.max_pct || ing.dosage_max || null
+              maxPct: ing.pourcentage_max || ing.max_pct || ing.dosage_max || null
             });
+          }
+
+          // Register technical sheet dynamically if available
+          if (ing.fiche_technique && typeof INGREDIENT_SHEETS !== 'undefined') {
+            const ft = ing.fiche_technique;
+            if (!INGREDIENT_SHEETS[ing.nom]) {
+              const props = [];
+              if (ing.note) {
+                ing.note.split(',').forEach(p => {
+                  const val = p.trim();
+                  if (val) props.push(val);
+                });
+              }
+              INGREDIENT_SHEETS[ing.nom] = {
+                inci: ft.nom_inci || ing.inci || "",
+                category: ft.categorie_fonctionnelle || "Ingrédient",
+                phases: phase === 'AQUEUSE' ? 'Aqueuse' : phase === 'HUILEUSE' ? 'Huileuse' : 'Refroidissement',
+                dosageMin: ft.ph_optimal_min || parseFloat(ing.pourcentage_min) || 0,
+                dosageMax: parseFloat(ing.pourcentage_max) || 100,
+                solubility: ft.solubilite || "Non spécifié",
+                pH: (ft.ph_optimal_min !== null && ft.ph_optimal_max !== null)
+                  ? `${ft.ph_optimal_min} – ${ft.ph_optimal_max}`
+                  : "Non spécifié",
+                temp: ft.temperature_incorporation || "Température ambiante",
+                properties: props,
+                cautions: ft.precautions || "",
+                tips: ft.conseils_formulateur || ""
+              };
+            }
           }
         });
       }
@@ -776,6 +825,7 @@
 
     // Skeletons definitions
     const HAIRCARE_TYPES = [
+      // ── LEAVE-IN SPRAY — AQUEUSE dominant, no emulsifier needed ──
       {
         label: 'Leave-in Spray', value: 'LEAVE_IN', formulaType: 'LEAVE_IN', skeleton: [
           { name: "Jus d'Aloe Vera", pct: 20, phase: 'AQUEUSE' },
@@ -786,9 +836,10 @@
           { name: 'Huile de Baobab', pct: 2, phase: 'HUILEUSE' },
           { name: 'Panthénol (B5)', pct: 2, phase: 'REFROIDISSEMENT' },
           { name: 'Protéines Hydrolysées', pct: 2, phase: 'REFROIDISSEMENT' },
-          { name: 'Cosgard (Geogard 221)', pct: 1, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
         ]
       },
+      // ── CONDITIONNER ──
       {
         label: 'Conditionneur', value: 'CONDITIONER', formulaType: 'CONDITIONER', skeleton: [
           { name: 'Glycérine Végétale', pct: 3, phase: 'AQUEUSE' },
@@ -799,60 +850,432 @@
           { name: 'Beurre de Karité', pct: 5, phase: 'HUILEUSE' },
           { name: 'Huile de Pépins de Raisin', pct: 3, phase: 'HUILEUSE' },
           { name: 'Panthénol (B5)', pct: 2, phase: 'REFROIDISSEMENT' },
-          { name: 'Protéines de Soie Hydrolysées', pct: 1, phase: 'REFROIDISSEMENT' },
-          { name: 'Cosgard (Geogard 221)', pct: 1, phase: 'REFROIDISSEMENT' },
+          { name: 'Protéines Hydrolysées', pct: 1, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
         ]
       },
+      // ── MASQUE CAPILLAIRE ──
       {
         label: 'Masque Capillaire', value: 'MASQUE', formulaType: 'MASQUE', skeleton: [
           { name: 'Glycérine Végétale', pct: 5, phase: 'AQUEUSE' },
-          { name: "Jus d'Aloe Vera", pct: 5, phase: 'AQUEUSE' },
+          { name: "Gel d'Aloe Vera", pct: 5, phase: 'AQUEUSE' },
           { name: 'BTMS-50', pct: 6, phase: 'HUILEUSE' },
           { name: 'Beurre de Karité', pct: 13, phase: 'HUILEUSE' },
           { name: 'Huile de Baobab', pct: 5, phase: 'HUILEUSE' },
           { name: "Huile d'Amande Douce", pct: 5, phase: 'HUILEUSE' },
           { name: 'Panthénol (B5)', pct: 3, phase: 'REFROIDISSEMENT' },
-          { name: 'Protéines de Soie Hydrolysées', pct: 3, phase: 'REFROIDISSEMENT' },
+          { name: 'Protéines Hydrolysées', pct: 3, phase: 'REFROIDISSEMENT' },
           { name: 'Allantoïne', pct: 0.5, phase: 'REFROIDISSEMENT' },
-          { name: 'Cosgard (Geogard 221)', pct: 1, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
         ]
       },
+      // ── SHAMPOING ──
       {
         label: 'Shampoing', value: 'SHAMPOO', formulaType: 'SHAMPOING', skeleton: [
-          { name: "Eau Distillée", pct: 54, phase: 'AQUEUSE' },
+          { name: 'Coco Glucoside', pct: 20, phase: 'AQUEUSE' },
+          { name: 'Cocamidopropyl Bétaïne', pct: 10, phase: 'AQUEUSE' },
+          { name: 'Decyl Glucoside', pct: 8, phase: 'AQUEUSE' },
           { name: 'Glycérine Végétale', pct: 3, phase: 'AQUEUSE' },
           { name: 'Panthénol (B5)', pct: 2, phase: 'REFROIDISSEMENT' },
-          { name: 'Protéines de Soie Hydrolysées', pct: 2, phase: 'REFROIDISSEMENT' },
-          { name: 'Cosgard (Geogard 221)', pct: 1, phase: 'REFROIDISSEMENT' },
+          { name: 'Protéines Hydrolysées', pct: 2, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
         ]
-      }
+      },
+      // ── LAIT CAPILLAIRE ──
+      {
+        label: 'Lait Capillaire', value: 'LAIT', formulaType: 'LAIT', skeleton: [
+          { name: 'Glycérine Végétale', pct: 4, phase: 'AQUEUSE' },
+          { name: "Jus d'Aloe Vera", pct: 5, phase: 'AQUEUSE' },
+          { name: 'Olivem-1000', pct: 4, phase: 'HUILEUSE' },
+          { name: 'Beurre de Karité', pct: 5, phase: 'HUILEUSE' },
+          { name: 'Huile de Coco Vierge', pct: 5, phase: 'HUILEUSE' },
+          { name: 'Huile de Baobab', pct: 4, phase: 'HUILEUSE' },
+          { name: 'Panthénol (B5)', pct: 2, phase: 'REFROIDISSEMENT' },
+          { name: 'Protéines Hydrolysées', pct: 3, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── CRÈME CAPILLAIRE ──
+      {
+        label: 'Crème Capillaire', value: 'CREME_CAP', formulaType: 'CREME', skeleton: [
+          { name: 'Glycérine Végétale', pct: 5, phase: 'AQUEUSE' },
+          { name: "Gel d'Aloe Vera", pct: 5, phase: 'AQUEUSE' },
+          { name: 'BTMS-50', pct: 5, phase: 'HUILEUSE' },
+          { name: 'Alcool Cétéarylique', pct: 3, phase: 'HUILEUSE' },
+          { name: 'Beurre de Karité', pct: 15, phase: 'HUILEUSE' },
+          { name: 'Huile de Baobab', pct: 8, phase: 'HUILEUSE' },
+          { name: "Huile d'Amande Douce", pct: 5, phase: 'HUILEUSE' },
+          { name: 'Panthénol (B5)', pct: 3, phase: 'REFROIDISSEMENT' },
+          { name: 'Protéines Hydrolysées', pct: 3, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── LOTION CAPILLAIRE ──
+      {
+        label: 'Lotion Capillaire', value: 'LOTION_CAP', formulaType: 'LOTION', skeleton: [
+          { name: 'Glycérine Végétale', pct: 5, phase: 'AQUEUSE' },
+          { name: "Jus d'Aloe Vera", pct: 10, phase: 'AQUEUSE' },
+          { name: 'Olivem-1000', pct: 2, phase: 'HUILEUSE' },
+          { name: 'Alcool Cétéarylique', pct: 1, phase: 'HUILEUSE' },
+          { name: 'Huile de Jojoba', pct: 3, phase: 'HUILEUSE' },
+          { name: 'Panthénol (B5)', pct: 3, phase: 'REFROIDISSEMENT' },
+          { name: 'Protéines Hydrolysées', pct: 1, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── LOTION AUX PLANTES ──
+      {
+        label: 'Lotion aux Plantes', value: 'LOTION_PLANTES', formulaType: 'LOTION', skeleton: [
+          { name: "Jus d'Aloe Vera", pct: 15, phase: 'AQUEUSE' },
+          { name: "Hydrolat d'Hibiscus", pct: 10, phase: 'AQUEUSE' },
+          { name: 'Glycérine Végétale', pct: 5, phase: 'AQUEUSE' },
+          { name: 'Extrait de Romarin CO2', pct: 1, phase: 'AQUEUSE' },
+          { name: 'Extrait de Thé Vert', pct: 2, phase: 'AQUEUSE' },
+          { name: 'Olivem-1000', pct: 2, phase: 'HUILEUSE' },
+          { name: 'Alcool Cétéarylique', pct: 1, phase: 'HUILEUSE' },
+          { name: 'Huile de Baobab', pct: 3, phase: 'HUILEUSE' },
+          { name: 'Panthénol (B5)', pct: 3, phase: 'REFROIDISSEMENT' },
+          { name: 'Protéines Hydrolysées', pct: 1, phase: 'REFROIDISSEMENT' },
+          { name: 'Allantoïne', pct: 0.5, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── HUILE CAPILLAIRE — anhydrous, HUILE only ──
+      {
+        label: 'Huile Capillaire', value: 'HUILE_CAP', formulaType: 'HUILE', skeleton: [
+          { name: 'Huile de Baobab', pct: 35, phase: 'HUILEUSE' },
+          { name: "Huile d'Amande Douce", pct: 25, phase: 'HUILEUSE' },
+          { name: 'Huile de Pépins de Raisin', pct: 20, phase: 'HUILEUSE' },
+          { name: 'Huile de Ricin', pct: 10, phase: 'HUILEUSE' },
+          { name: "Huile d'Argan", pct: 7, phase: 'HUILEUSE' },
+          { name: 'Vitamine E (Tocophérol)', pct: 2, phase: 'REFROIDISSEMENT' },
+          { name: 'HE Romarin', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── BAUME CAPILLAIRE — anhydrous ──
+      {
+        label: 'Baume Capillaire', value: 'BAUME_CAP', formulaType: 'BAUME', skeleton: [
+          { name: 'Beurre de Karité', pct: 40, phase: 'HUILEUSE' },
+          { name: 'Beurre de Cacao', pct: 10, phase: 'HUILEUSE' },
+          { name: 'Huile de Baobab', pct: 15, phase: 'HUILEUSE' },
+          { name: 'Huile de Coco Vierge', pct: 15, phase: 'HUILEUSE' },
+          { name: "Cire d'Abeille", pct: 10, phase: 'HUILEUSE' },
+          { name: 'Huile de Ricin', pct: 7, phase: 'HUILEUSE' },
+          { name: 'Vitamine E (Tocophérol)', pct: 2, phase: 'REFROIDISSEMENT' },
+          { name: 'HE Lavande', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── BEURRE CHANTILLY — anhydrous ──
+      {
+        label: 'Beurre Chantilly', value: 'BEURRE_CHAN', formulaType: 'CHANTILLY', skeleton: [
+          { name: 'Beurre de Karité', pct: 45, phase: 'HUILEUSE' },
+          { name: 'Beurre de Mangue', pct: 15, phase: 'HUILEUSE' },
+          { name: 'Huile de Coco Vierge', pct: 15, phase: 'HUILEUSE' },
+          { name: 'Huile de Jojoba', pct: 12, phase: 'HUILEUSE' },
+          { name: 'Fécule de Maïs', pct: 8, phase: 'HUILEUSE' },
+          { name: 'Vitamine E (Tocophérol)', pct: 2, phase: 'REFROIDISSEMENT' },
+          { name: 'HE Lavande', pct: 1, phase: 'REFROIDISSEMENT' },
+          { name: 'HE Ylang-Ylang', pct: 0.5, phase: 'REFROIDISSEMENT' },
+          { name: 'HE Géranium', pct: 1.5, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── SÉRUM CAPILLAIRE ──
+      {
+        label: 'Sérum Capillaire', value: 'SERUM_CAP', formulaType: 'SERUM', skeleton: [
+          { name: 'Glycérine Végétale', pct: 5, phase: 'AQUEUSE' },
+          { name: 'Acide Hyaluronique', pct: 1, phase: 'AQUEUSE' },
+          { name: 'Niacinamide', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Bétaïne', pct: 2, phase: 'AQUEUSE' },
+          { name: 'Huile de Jojoba', pct: 5, phase: 'HUILEUSE' },
+          { name: 'Panthénol (B5)', pct: 5, phase: 'REFROIDISSEMENT' },
+          { name: 'Protéines Hydrolysées', pct: 5, phase: 'REFROIDISSEMENT' },
+          { name: 'Allantoïne', pct: 0.5, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      { label: 'Personnalisée', value: 'PERSO_CAP', formulaType: 'CUSTOM', skeleton: [] }
     ];
 
     const SKINCARE_TYPES = [
+      // ── SÉRUM HYDRATANT ──
       {
-        label: 'Crème Visage Hydratante', value: 'CREME_VISAGE', formulaType: 'CREME', skeleton: [
-          { name: "Jus d'Aloe Vera", pct: 30, phase: 'AQUEUSE' },
-          { name: 'Glycérine Végétale', pct: 4, phase: 'AQUEUSE' },
-          { name: 'Olivem-1000', pct: 5, phase: 'HUILEUSE' },
-          { name: 'Huile de Jojoba', pct: 10, phase: 'HUILEUSE' },
-          { name: "Huile d'Amande Douce", pct: 5, phase: 'HUILEUSE' },
-          { name: 'Alcool Cétéarylique', pct: 2, phase: 'HUILEUSE' },
-          { name: 'Niacinamide', pct: 4, phase: 'REFROIDISSEMENT' },
+        label: 'Sérum Hydratant', value: 'SERUM_HYD', formulaType: 'SERUM', skeleton: [
+          { name: 'Acide Hyaluronique HMW', pct: 1, phase: 'AQUEUSE' },
+          { name: 'Acide Hyaluronique LMW', pct: 0.5, phase: 'AQUEUSE' },
+          { name: 'Glycérine Végétale', pct: 5, phase: 'AQUEUSE' },
+          { name: 'Sodium PCA', pct: 2, phase: 'AQUEUSE' },
+          { name: 'Niacinamide', pct: 5, phase: 'AQUEUSE' },
+          { name: 'Propanediol (1,3)', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Panthénol (B5)', pct: 3, phase: 'REFROIDISSEMENT' },
           { name: 'Allantoïne', pct: 0.5, phase: 'REFROIDISSEMENT' },
-          { name: 'Cosgard (Geogard 221)', pct: 1, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
         ]
       },
+      // ── SÉRUM ANTI-HYPERPIGMENTATION ──
       {
-        label: 'Sérum Éclaircissant Anti-taches', value: 'SERUM_ANTI_TACHES', formulaType: 'SERUM', skeleton: [
-          { name: "Jus d'Aloe Vera", pct: 40, phase: 'AQUEUSE' },
-          { name: 'Acide Hyaluronique', pct: 1, phase: 'AQUEUSE' },
-          { name: 'Glycérine Végétale', pct: 3, phase: 'AQUEUSE' },
-          { name: 'Niacinamide', pct: 5, phase: 'REFROIDISSEMENT' },
-          { name: 'Alpha Arbutine', pct: 2, phase: 'REFROIDISSEMENT' },
-          { name: 'Acide Tranexamique', pct: 2, phase: 'REFROIDISSEMENT' },
-          { name: 'Cosgard (Geogard 221)', pct: 1, phase: 'REFROIDISSEMENT' },
+        label: 'Sérum Anti-Hyperpigmentation', value: 'SERUM_HYPER', formulaType: 'SERUM', skeleton: [
+          { name: 'Glycérine Végétale', pct: 5, phase: 'AQUEUSE' },
+          { name: 'Niacinamide', pct: 5, phase: 'AQUEUSE' },
+          { name: 'Alpha Arbutine', pct: 2, phase: 'AQUEUSE' },
+          { name: 'Acide Kojique', pct: 1, phase: 'AQUEUSE' },
+          { name: 'Acide Tranexamique', pct: 2, phase: 'AQUEUSE' },
+          { name: 'Acide Hyaluronique HMW', pct: 1, phase: 'AQUEUSE' },
+          { name: 'Propanediol (1,3)', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Allantoïne', pct: 0.5, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
         ]
-      }
+      },
+      // ── SÉRUM ANTI-ACNÉ ──
+      {
+        label: 'Sérum Anti-Acné', value: 'SERUM_ACNE', formulaType: 'SERUM', skeleton: [
+          { name: 'Niacinamide', pct: 5, phase: 'AQUEUSE' },
+          { name: 'Acide Salicylique (Skincare)', pct: 1, phase: 'AQUEUSE' },
+          { name: 'Zinc PCA', pct: 1, phase: 'AQUEUSE' },
+          { name: 'Acide Azélaïque', pct: 5, phase: 'AQUEUSE' },
+          { name: "Jus d'Aloe Vera", pct: 5, phase: 'AQUEUSE' },
+          { name: 'Extrait de Thé Vert (Skincare)', pct: 2, phase: 'AQUEUSE' },
+          { name: 'Glycérine Végétale', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Allantoïne', pct: 0.5, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── SÉRUM ANTI-ÂGE ──
+      {
+        label: 'Sérum Anti-Âge', value: 'SERUM_AGE', formulaType: 'SERUM', skeleton: [
+          { name: 'Acide Hyaluronique LMW', pct: 1, phase: 'AQUEUSE' },
+          { name: 'Glycérine Végétale', pct: 7, phase: 'AQUEUSE' },
+          { name: 'Propanediol (1,3)', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Bakuchiol', pct: 1, phase: 'HUILEUSE' },
+          { name: 'Coenzyme Q10', pct: 0.5, phase: 'REFROIDISSEMENT' },
+          { name: 'Argireline', pct: 5, phase: 'REFROIDISSEMENT' },
+          { name: 'Panthénol (B5)', pct: 3, phase: 'REFROIDISSEMENT' },
+          { name: 'Allantoïne', pct: 0.5, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── SÉRUM ÉCLAT ──
+      {
+        label: 'Sérum Éclat', value: 'SERUM_ECLAT', formulaType: 'SERUM', skeleton: [
+          { name: 'Glycérine Végétale', pct: 5, phase: 'AQUEUSE' },
+          { name: 'Niacinamide', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Alpha Arbutine', pct: 1, phase: 'AQUEUSE' },
+          { name: 'Acide Hyaluronique HMW', pct: 1, phase: 'AQUEUSE' },
+          { name: 'Sodium PCA', pct: 2, phase: 'AQUEUSE' },
+          { name: 'Propanediol (1,3)', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Vitamine C (SAP)', pct: 10, phase: 'REFROIDISSEMENT' },
+          { name: 'Vitamine E (Skincare)', pct: 0.5, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── SÉRUM PEAU GRASSE ──
+      {
+        label: 'Sérum Peau Grasse', value: 'SERUM_GRASSE', formulaType: 'SERUM', skeleton: [
+          { name: 'Niacinamide', pct: 10, phase: 'AQUEUSE' },
+          { name: 'Zinc PCA', pct: 2, phase: 'AQUEUSE' },
+          { name: 'Sodium PCA', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Propanediol (1,3)', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Extrait de Thé Vert (Skincare)', pct: 2, phase: 'AQUEUSE' },
+          { name: 'Acide Salicylique (Skincare)', pct: 0.5, phase: 'AQUEUSE' },
+          { name: 'Allantoïne', pct: 0.5, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── CRÈME HYDRATANTE ──
+      {
+        label: 'Crème Hydratante', value: 'CREME_HYD', formulaType: 'CREME', skeleton: [
+          { name: 'Glycérine Végétale', pct: 5, phase: 'AQUEUSE' },
+          { name: 'Acide Hyaluronique HMW', pct: 1, phase: 'AQUEUSE' },
+          { name: 'Propanediol (1,3)', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Olivem-1000', pct: 5, phase: 'HUILEUSE' },
+          { name: 'Glyceryl Stearate', pct: 2, phase: 'HUILEUSE' },
+          { name: 'Huile de Jojoba', pct: 8, phase: 'HUILEUSE' },
+          { name: 'Squalane (Skincare)', pct: 5, phase: 'HUILEUSE' },
+          { name: 'Beurre de Karité', pct: 3, phase: 'HUILEUSE' },
+          { name: 'Céramide NP', pct: 0.5, phase: 'REFROIDISSEMENT' },
+          { name: 'Panthénol (B5)', pct: 3, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── CRÈME ANTI-ÂGE ──
+      {
+        label: 'Crème Anti-Âge', value: 'CREME_AGE', formulaType: 'CREME', skeleton: [
+          { name: 'Acide Hyaluronique LMW', pct: 1, phase: 'AQUEUSE' },
+          { name: 'Glycérine Végétale', pct: 5, phase: 'AQUEUSE' },
+          { name: 'Propanediol (1,3)', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Olivem-1000', pct: 6, phase: 'HUILEUSE' },
+          { name: 'Glyceryl Stearate', pct: 2, phase: 'HUILEUSE' },
+          { name: 'Huile de Rose Musquée', pct: 8, phase: 'HUILEUSE' },
+          { name: "Huile d'Argan", pct: 5, phase: 'HUILEUSE' },
+          { name: 'Beurre de Karité', pct: 5, phase: 'HUILEUSE' },
+          { name: 'Bakuchiol', pct: 1, phase: 'HUILEUSE' },
+          { name: 'Argireline', pct: 3, phase: 'REFROIDISSEMENT' },
+          { name: 'Coenzyme Q10', pct: 0.5, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── CRÈME ÉCLAT ──
+      {
+        label: 'Crème Éclat', value: 'CREME_ECLAT', formulaType: 'CREME', skeleton: [
+          { name: 'Glycérine Végétale', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Acide Hyaluronique HMW', pct: 1, phase: 'AQUEUSE' },
+          { name: 'Propanediol (1,3)', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Olivem-1000', pct: 5, phase: 'HUILEUSE' },
+          { name: 'Glyceryl Stearate', pct: 2, phase: 'HUILEUSE' },
+          { name: 'Huile de Rose Musquée', pct: 6, phase: 'HUILEUSE' },
+          { name: "Huile d'Argan", pct: 4, phase: 'HUILEUSE' },
+          { name: 'Squalane (Skincare)', pct: 4, phase: 'HUILEUSE' },
+          { name: 'Niacinamide', pct: 3, phase: 'REFROIDISSEMENT' },
+          { name: 'Alpha Arbutine', pct: 1, phase: 'REFROIDISSEMENT' },
+          { name: 'Vitamine C (SAP)', pct: 8, phase: 'REFROIDISSEMENT' },
+          { name: 'Allantoïne', pct: 0.5, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── CRÈME PEAUX SENSIBLES ──
+      {
+        label: 'Crème Peaux Sensibles', value: 'CREME_SENS', formulaType: 'CREME', skeleton: [
+          { name: 'Glycérine Végétale', pct: 5, phase: 'AQUEUSE' },
+          { name: 'Eau Thermale', pct: 5, phase: 'AQUEUSE' },
+          { name: 'Olivem-1000', pct: 5, phase: 'HUILEUSE' },
+          { name: 'Glyceryl Stearate', pct: 2, phase: 'HUILEUSE' },
+          { name: 'Huile de Calendula', pct: 5, phase: 'HUILEUSE' },
+          { name: 'Squalane (Skincare)', pct: 5, phase: 'HUILEUSE' },
+          { name: 'Centella Asiatica', pct: 3, phase: 'REFROIDISSEMENT' },
+          { name: 'Bisabolol', pct: 0.5, phase: 'REFROIDISSEMENT' },
+          { name: 'Panthénol (B5)', pct: 3, phase: 'REFROIDISSEMENT' },
+          { name: 'Allantoïne', pct: 1, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── MASQUE HYDRATANT ──
+      {
+        label: 'Masque Hydratant', value: 'MASQUE_HYD', formulaType: 'MASQUE', skeleton: [
+          { name: "Jus d'Aloe Vera", pct: 15, phase: 'AQUEUSE' },
+          { name: 'Glycérine Végétale', pct: 8, phase: 'AQUEUSE' },
+          { name: 'Acide Hyaluronique HMW', pct: 1, phase: 'AQUEUSE' },
+          { name: 'Sodium PCA', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Propanediol (1,3)', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Gomme Xanthane', pct: 0.3, phase: 'AQUEUSE' },
+          { name: 'Centella Asiatica', pct: 3, phase: 'REFROIDISSEMENT' },
+          { name: 'Panthénol (B5)', pct: 3, phase: 'REFROIDISSEMENT' },
+          { name: 'Allantoïne', pct: 0.5, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── MASQUE PURIFIANT ──
+      {
+        label: 'Masque Purifiant', value: 'MASQUE_PUR', formulaType: 'MASQUE', skeleton: [
+          { name: 'Argile Blanche Kaolin', pct: 15, phase: 'AQUEUSE' },
+          { name: 'Argile Verte', pct: 5, phase: 'AQUEUSE' },
+          { name: "Jus d'Aloe Vera", pct: 10, phase: 'AQUEUSE' },
+          { name: 'Glycérine Végétale', pct: 5, phase: 'AQUEUSE' },
+          { name: 'Propanediol (1,3)', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Niacinamide', pct: 3, phase: 'REFROIDISSEMENT' },
+          { name: 'Zinc PCA', pct: 1, phase: 'REFROIDISSEMENT' },
+          { name: 'Acide Salicylique (Skincare)', pct: 0.5, phase: 'REFROIDISSEMENT' },
+          { name: 'Allantoïne', pct: 0.5, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── LOTION TONIQUE ──
+      {
+        label: 'Lotion Tonique', value: 'LOTION_TON', formulaType: 'LOTION', skeleton: [
+          { name: 'Hydrolat de Rose', pct: 20, phase: 'AQUEUSE' },
+          { name: 'Glycérine Végétale', pct: 5, phase: 'AQUEUSE' },
+          { name: 'Niacinamide', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Acide Hyaluronique HMW', pct: 0.5, phase: 'AQUEUSE' },
+          { name: 'Propanediol (1,3)', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Bétaïne', pct: 2, phase: 'AQUEUSE' },
+          { name: 'Panthénol (B5)', pct: 2, phase: 'REFROIDISSEMENT' },
+          { name: 'Allantoïne', pct: 0.3, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── HUILE VISAGE — anhydrous ──
+      {
+        label: 'Huile Visage', value: 'HUILE_VIS', formulaType: 'HUILE', skeleton: [
+          { name: 'Huile de Jojoba', pct: 35, phase: 'HUILEUSE' },
+          { name: 'Huile de Rose Musquée', pct: 25, phase: 'HUILEUSE' },
+          { name: "Huile d'Argan", pct: 20, phase: 'HUILEUSE' },
+          { name: 'Squalane (Skincare)', pct: 10, phase: 'HUILEUSE' },
+          { name: 'Huile de Marula', pct: 5, phase: 'HUILEUSE' },
+          { name: 'Vitamine E (Skincare)', pct: 1, phase: 'REFROIDISSEMENT' },
+          { name: 'Coenzyme Q10', pct: 0.5, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── CONTOUR DES YEUX ──
+      {
+        label: 'Contour des Yeux', value: 'CONTOUR_YEUX', formulaType: 'SERUM', skeleton: [
+          { name: 'Acide Hyaluronique LMW', pct: 1, phase: 'AQUEUSE' },
+          { name: 'Glycérine Végétale', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Propanediol (1,3)', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Centella Asiatica', pct: 2, phase: 'AQUEUSE' },
+          { name: 'Squalane (Skincare)', pct: 3, phase: 'HUILEUSE' },
+          { name: 'Argireline', pct: 5, phase: 'REFROIDISSEMENT' },
+          { name: 'Panthénol (B5)', pct: 2, phase: 'REFROIDISSEMENT' },
+          { name: 'Allantoïne', pct: 0.5, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── GEL NETTOYANT ──
+      {
+        label: 'Gel Nettoyant', value: 'GEL_NETT', formulaType: 'SHAMPOING', skeleton: [
+          { name: 'Coco Glucoside', pct: 18, phase: 'AQUEUSE' },
+          { name: 'Cocamidopropyl Bétaïne', pct: 10, phase: 'AQUEUSE' },
+          { name: 'Glycérine Végétale', pct: 5, phase: 'AQUEUSE' },
+          { name: "Jus d'Aloe Vera", pct: 3, phase: 'AQUEUSE' },
+          { name: 'Panthénol (B5)', pct: 1, phase: 'REFROIDISSEMENT' },
+          { name: 'Allantoïne', pct: 0.5, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── EAU MICELLAIRE ──
+      {
+        label: 'Eau Micellaire', value: 'EAU_MIC', formulaType: 'LOTION', skeleton: [
+          { name: 'Polysorbate 20', pct: 5, phase: 'AQUEUSE' },
+          { name: 'Glycérine Végétale', pct: 5, phase: 'AQUEUSE' },
+          { name: 'Hydrolat de Rose', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Propanediol (1,3)', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Panthénol (B5)', pct: 0.5, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── HUILE DÉMAQUILLANTE — anhydrous ──
+      {
+        label: 'Huile Démaquillante', value: 'HUILE_DEM', formulaType: 'HUILE', skeleton: [
+          { name: 'Caprylic/Capric Triglyceride', pct: 45, phase: 'HUILEUSE' },
+          { name: 'Huile de Jojoba', pct: 30, phase: 'HUILEUSE' },
+          { name: 'Polysorbate 80', pct: 15, phase: 'HUILEUSE' },
+          { name: 'Huile de Calendula', pct: 5, phase: 'HUILEUSE' },
+          { name: 'Vitamine E (Skincare)', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── EXFOLIANT AHA/BHA ──
+      {
+        label: 'Exfoliant AHA/BHA', value: 'EXFOL', formulaType: 'SERUM', skeleton: [
+          { name: "Jus d'Aloe Vera", pct: 10, phase: 'AQUEUSE' },
+          { name: 'Glycérine Végétale', pct: 5, phase: 'AQUEUSE' },
+          { name: 'Propanediol (1,3)', pct: 3, phase: 'AQUEUSE' },
+          { name: 'Acide Glycolique', pct: 8, phase: 'REFROIDISSEMENT' },
+          { name: 'Acide Salicylique (Skincare)', pct: 0.5, phase: 'REFROIDISSEMENT' },
+          { name: 'Niacinamide', pct: 3, phase: 'REFROIDISSEMENT' },
+          { name: 'Allantoïne', pct: 0.5, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      // ── BRUME HYDRATANTE ──
+      {
+        label: 'Brume Hydratante', value: 'BRUME', formulaType: 'LOTION', skeleton: [
+          { name: 'Hydrolat de Rose', pct: 15, phase: 'AQUEUSE' },
+          { name: 'Acide Hyaluronique HMW', pct: 1, phase: 'AQUEUSE' },
+          { name: 'Glycérine Végétale', pct: 5, phase: 'AQUEUSE' },
+          { name: "Jus d'Aloe Vera", pct: 4, phase: 'AQUEUSE' },
+          { name: 'Niacinamide', pct: 2, phase: 'REFROIDISSEMENT' },
+          { name: 'Panthénol (B5)', pct: 1, phase: 'REFROIDISSEMENT' },
+          { name: 'Conservateur', pct: 1, phase: 'REFROIDISSEMENT' },
+        ]
+      },
+      { label: 'Personnalisée Skincare', value: 'PERSO_SKIN', formulaType: 'CUSTOM', skeleton: [] }
     ];
 
     // Category tracking (haircare/skincare)
@@ -958,6 +1381,7 @@
       ${state.showLibrary ? buildLibraryModal() : ""}
       ${state.showIngSheet ? buildIngredientSheet(state.showIngSheet) : ""}
       ${state.libAdding ? buildAddIngredientModal() : ""}
+      ${state.libEditing ? buildEditIngredientModal() : ""}
       `;
     }
 
@@ -1258,7 +1682,7 @@
             </div>
             ${items.map((ing, i) => {
         const p = PHASES[ing.phase] || PHASES.AQUEUSE;
-        const isCustom = !initNames.has(ing.name);
+        const isCustom = ing.isCustom !== undefined ? ing.isCustom : !initNames.has(ing.name);
         return `
                 <div class="lib-item" style="background:${i % 2 === 0 ? "#fff" : "#FAFAFA"}; border: 1px solid ${p.mid}; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
                 <div class="lib-dot" style="background:${p.color}"></div>
@@ -1273,8 +1697,10 @@
                 ${q ? `<div style="font-size:10px;padding:2px 7px;border-radius:20px;font-weight:700;margin-right:7px;background:${p.light};color:${p.accent}">${p.icon} ${p.short}</div>` : ""}
                 <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
                   ${INGREDIENT_SHEETS[ing.name] ? `<button class="ing-info-btn" data-ingname="${esc(ing.name)}" title="Fiche technique" style="background:#EFF6FF;border:1px solid #BFDBFE;cursor:pointer;color:#3B82F6;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>` : ""}
-                  <button class="edit-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Modifier" style="background:#FFF7ED;border:1px solid #FED7AA;cursor:pointer;color:#F56D13;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-                  <button class="del-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Supprimer" style="background:#FEE2E2;border:none;cursor:pointer;color:#DC2626;font-size:14px;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;">🗑</button>
+                  ${isCustom ? `
+                    <button class="edit-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Modifier" style="background:#FFF7ED;border:1px solid #FED7AA;cursor:pointer;color:#F56D13;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button class="del-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Supprimer" style="background:#FEE2E2;border:none;cursor:pointer;color:#DC2626;font-size:14px;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;">🗑</button>
+                  ` : ""}
                 </div>
               </div>`;
       }).join("")}
@@ -1519,16 +1945,27 @@
 
           <div class="type-bar">
             ${(() => {
-          const types = window._currentTypes || (typeof HAIRCARE_TYPES !== 'undefined' ? HAIRCARE_TYPES : [{ label: '💧 Leave-in Spray', value: 'LEAVE_IN' }]);
-          return `<div class="type-selector-wrap">
-                <div class="type-dropdown-wrap">
-                  <select class="type-dropdown" id="type-dropdown-select" onchange="selectProductType(this.value)">
-                    ${types.map(t => `<option value="${esc(t.value)}" ${state.skeletonType === t.value ? 'selected' : ''}>${t.label}</option>`).join('')}
-                  </select>
-                  <span class="type-dropdown-arrow">▾</span>
+              const types = window._currentTypes || (typeof HAIRCARE_TYPES !== 'undefined' ? HAIRCARE_TYPES : [{ label: 'Leave-in Spray', value: 'LEAVE_IN' }]);
+              const currentType = types.find(t => t.value === state.skeletonType) || types[0];
+              const currentTypeLabel = currentType ? currentType.label : "";
+              return `<div class="type-selector-wrap">
+                <div class="type-dropdown-wrap" style="position:relative;">
+                  <button class="type-dropdown" id="type-dropdown-trigger" style="display:flex; justify-content:space-between; align-items:center; gap:8px; min-width:220px; text-align:left;">
+                    <span>${esc(currentTypeLabel)}</span>
+                    <span class="type-dropdown-arrow" style="position:static; transform:none; margin-left:auto;">▾</span>
+                  </button>
+                  ${state.showTypeDropdown ? `
+                    <div class="type-dropdown-menu" style="position:absolute; top:100%; left:0; width:100%; min-width:220px; background:#7C3AED; border:1px solid rgba(255,255,255,0.2); border-radius:10px; box-shadow:0 10px 25px rgba(0,0,0,0.2); z-index:10000; margin-top:5px; max-height:250px; overflow-y:auto;">
+                      ${types.map(t => `
+                        <div class="type-dropdown-item ${state.skeletonType === t.value ? 'selected' : ''}" style="padding:10px 14px; font-size:13px; font-weight:600; color:#fff; cursor:pointer; transition:background 0.15s;" data-value="${esc(t.value)}">
+                          ${esc(t.label)}
+                        </div>
+                      `).join('')}
+                    </div>
+                  ` : ''}
                 </div>
               </div>`;
-        })()}
+            })()}
           </div>
 
           <div class="progress-bar-wrap">
@@ -1872,7 +2309,7 @@
               </div>
               ${items.map((ing, i) => {
         const p = PHASES[ing.phase] || PHASES.AQUEUSE;
-        const isCustom = !initNames.has(ing.name);
+        const isCustom = ing.isCustom !== undefined ? ing.isCustom : !initNames.has(ing.name);
         return `
                 <div class="lib-item" style="background:${i % 2 === 0 ? "#fff" : "#FAFAFA"}; border: 1px solid ${p.mid}; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
                   <div class="lib-dot" style="background:${p.color}"></div>
@@ -1887,8 +2324,10 @@
                   ${q ? `<div style="font-size:10px;padding:2px 7px;border-radius:20px;font-weight:700;margin-right:7px;background:${p.light};color:${p.accent}">${p.icon} ${p.short}</div>` : ""}
                   <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
                     ${INGREDIENT_SHEETS[ing.name] ? `<button class="ing-info-btn" data-ingname="${esc(ing.name)}" title="Fiche technique" style="background:#EFF6FF;border:1px solid #BFDBFE;cursor:pointer;color:#3B82F6;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>` : ""}
-                    <button class="edit-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Modifier" style="background:#FFF7ED;border:1px solid #FED7AA;cursor:pointer;color:#F56D13;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-                    <button class="del-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Supprimer" style="background:#FEE2E2;border:none;cursor:pointer;color:#DC2626;font-size:14px;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;">🗑</button>
+                    ${isCustom ? `
+                      <button class="edit-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Modifier" style="background:#FFF7ED;border:1px solid #FED7AA;cursor:pointer;color:#F56D13;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                      <button class="del-lib-btn" data-libphase="${ing.phase}" data-libname="${esc(ing.name)}" title="Supprimer" style="background:#FEE2E2;border:none;cursor:pointer;color:#DC2626;font-size:14px;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;">🗑</button>
+                    ` : ""}
                   </div>
                 </div>`;
       }).join("")}
@@ -1975,6 +2414,135 @@
       </div>`;
     }
 
+    function buildEditIngredientModal() {
+      const item = state.libEditing;
+      if (!item) return "";
+
+      return `
+      <div class="modal-overlay" id="edit-ing-overlay">
+        <div class="modal-box" style="max-width: 480px; padding: 25px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.15); background:#fff;" onclick="event.stopPropagation()">
+          <h3 style="font-weight: 800; font-size: 18px; color: #1C0F32; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+            ✏️ Modifier l'ingrédient
+          </h3>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 12px; font-weight: 700; color: #8E7E72; margin-bottom: 6px;">Phase de formulation</label>
+            <select class="add-select" id="lib-edit-phase" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #EAE2D8; background: #fff; font-size: 13px; box-sizing: border-box;">
+              ${Object.entries(PHASES).map(([k, p]) => `<option value="${k}" ${item.phase === k ? "selected" : ""}>${p.icon} ${p.label}</option>`).join("")}
+            </select>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 12px; font-weight: 700; color: #8E7E72; margin-bottom: 6px;">Nom de l'ingrédient *</label>
+            <input class="add-input" id="lib-edit-name" placeholder="Ex: Hydrolat de Rose" value="${esc(item.name || "")}" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #EAE2D8; box-sizing: border-box; font-size: 13px;"/>
+          </div>
+          
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; font-size: 12px; font-weight: 700; color: #8E7E72; margin-bottom: 6px;">Propriétés / Description</label>
+            <input class="add-input" id="lib-edit-note" placeholder="Ex: Apaisant, tonifiant..." value="${esc(item.note || "")}" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #EAE2D8; box-sizing: border-box; font-size: 13px;"/>
+          </div>
+          
+          <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button class="btn-confirm" id="lib-edit-confirm" style="background:#F56D13; color:#fff; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 13px;">
+              Enregistrer
+            </button>
+            <button class="btn-cancel" id="lib-edit-cancel" style="background: #F1EBE3; color: #8E7E72; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 13px;">
+              Annuler
+            </button>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    function openEditModal(phase, name) {
+      const groups = state.library[phase];
+      if (!groups) return;
+
+      let foundItem = null;
+      for (const g of Object.keys(groups)) {
+        const item = (groups[g] || []).find(i => i.name === name);
+        if (item) {
+          foundItem = { ...item, oldPhase: phase, oldName: name };
+          break;
+        }
+      }
+
+      if (foundItem) {
+        state.libEditing = foundItem;
+        render();
+      }
+    }
+
+    function saveEditedIngredient() {
+      const item = state.libEditing;
+      if (!item) return;
+
+      const nameEl = document.getElementById("lib-edit-name");
+      const noteEl = document.getElementById("lib-edit-note");
+      const phaseEl = document.getElementById("lib-edit-phase");
+
+      const newName = (nameEl ? nameEl.value : item.name).trim();
+      if (!newName) return;
+
+      const newNote = (noteEl ? noteEl.value : item.note).trim();
+      const newPhase = (phaseEl ? phaseEl.value : item.phase) || item.phase;
+
+      const oldPhase = item.oldPhase || item.phase;
+      const oldName = item.oldName || item.name;
+
+      let targetId = item.id;
+      if (state.library[oldPhase]) {
+        for (const g of Object.keys(state.library[oldPhase])) {
+          const ex = (state.library[oldPhase][g] || []).find(i => i.name === oldName);
+          if (ex && ex.id) targetId = ex.id;
+          state.library[oldPhase][g] = (state.library[oldPhase][g] || []).filter(i => i.name !== oldName);
+        }
+      }
+
+      if (!state.library[newPhase]) {
+        state.library[newPhase] = {};
+      }
+      const groupKey = "✨ Mes Ingrédients Personnalisés";
+      if (!state.library[newPhase][groupKey]) {
+        state.library[newPhase][groupKey] = [];
+      }
+
+      const updatedItem = {
+        id: targetId,
+        name: newName,
+        phase: newPhase,
+        note: newNote || "Ingrédient personnalisé",
+        isCustom: true
+      };
+
+      state.library[newPhase][groupKey].unshift(updatedItem);
+      state.libTab = newPhase;
+      state.libSearch = "";
+
+      if (targetId) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (csrfToken) {
+          fetch(`/ingredients/${targetId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrfToken,
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+              nom: newName,
+              phase: newPhase,
+              inci: newNote || null
+            })
+          }).catch(err => console.error('Erreur mise à jour ingrédient:', err));
+        }
+      }
+
+      state.libEditing = null;
+      showToast("✅ Ingrédient mis à jour !");
+      render();
+    }
+
     function buildDropdownPanel() {
       const key = state.openDropdown;
       if (!key) return "";
@@ -2021,34 +2589,366 @@
   </div>`;
     }
 
-    // Modal Import Mockup (Claude Vision placeholder)
+    // ─── PDF Import Modal ─────────────────────────────────────────────────────
     function openImportModal() {
-      const input = prompt("Collez la liste des ingrédients (ex: Eau: 60%, Glycérine: 5%...) :");
-      if (input) {
-        showToast("Analyse et importation en cours...");
-        setTimeout(() => {
-          state.phases.AQUEUSE = [
-            { id: Date.now() + 1, name: "Jus d'Aloe Vera", pct: "65" },
-            { id: Date.now() + 2, name: "Glycérine Végétale", pct: "5" }
-          ];
-          state.phases.HUILEUSE = [
-            { id: Date.now() + 3, name: "Huile de Jojoba", pct: "15" },
-            { id: Date.now() + 4, name: "Olivem-1000", pct: "5" }
-          ];
-          state.phases.REFROIDISSEMENT = [
-            { id: Date.now() + 5, name: "Panthénol (B5)", pct: "3" },
-            { id: Date.now() + 6, name: "Conservateur", pct: "1" }
-          ];
-          state.formulaName = "Formule Importée";
-          state.totalWeight = 100;
-          render();
-          showToast("✅ Formule importée avec succès !");
-        }, 1500);
+      // Build the modal overlay
+      const overlay = document.createElement('div');
+      overlay.id = 'pdf-import-overlay';
+      overlay.style.cssText = `
+        position:fixed; inset:0; z-index:9999;
+        background:rgba(0,0,0,0.55); backdrop-filter:blur(6px);
+        display:flex; align-items:center; justify-content:center;
+        padding:16px;
+      `;
+
+      overlay.innerHTML = `
+        <div id="pdf-import-modal" style="
+          background:#fff;
+          border-radius:24px;
+          width:100%;
+          max-width:520px;
+          box-shadow:0 24px 64px rgba(0,0,0,0.22);
+          overflow:hidden;
+          font-family:'Plus Jakarta Sans',sans-serif;
+        ">
+          <!-- Header -->
+          <div style="background:linear-gradient(135deg,#7C3AED,#A855F7);padding:24px 28px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="color:rgba(255,255,255,0.75);font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">THE MIRACLE LAB</div>
+                <h2 style="color:#fff;font-size:20px;font-weight:800;margin:0;">Importer un PDF de formule</h2>
+              </div>
+              <button id="pdf-import-close" style="
+                background:rgba(255,255,255,0.15);
+                border:none;border-radius:50%;width:36px;height:36px;
+                color:#fff;font-size:18px;cursor:pointer;
+                display:flex;align-items:center;justify-content:center;
+              ">✕</button>
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div style="padding:28px;">
+            <!-- Drop zone -->
+            <div id="pdf-drop-zone" style="
+              border:2.5px dashed #C4B5FD;
+              border-radius:16px;
+              padding:36px 20px;
+              text-align:center;
+              cursor:pointer;
+              background:#FAFAFF;
+              transition:all 0.2s;
+            ">
+              <div style="margin-bottom:16px;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+              <div style="font-weight:700;font-size:15px;color:#4C1D95;margin-bottom:6px;">Glissez votre PDF ici</div>
+              <div style="font-size:13px;color:#8B7CC8;margin-bottom:16px;">ou cliquez pour choisir un fichier</div>
+              <input type="file" id="pdf-file-input" accept=".pdf" style="display:none;">
+              <button onclick="document.getElementById('pdf-file-input').click()" style="
+                background:#7C3AED;color:#fff;
+                border:none;border-radius:10px;
+                padding:10px 24px;font-size:14px;font-weight:700;
+                cursor:pointer;
+              ">Choisir un fichier PDF</button>
+            </div>
+
+            <!-- Status zone (hidden by default) -->
+            <div id="pdf-status" style="display:none;margin-top:16px;">
+              <div id="pdf-status-icon" style="text-align:center;margin-bottom:8px;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+              <div id="pdf-status-text" style="
+                text-align:center;font-size:14px;
+                font-weight:600;color:#7C3AED;
+              ">Analyse du PDF en cours…</div>
+              <div id="pdf-progress-bar" style="
+                margin-top:12px;
+                height:6px;border-radius:4px;
+                background:#EDE9FE;
+                overflow:hidden;
+              ">
+                <div id="pdf-progress-fill" style="
+                  height:100%;width:0%;border-radius:4px;
+                  background:linear-gradient(90deg,#7C3AED,#A855F7);
+                  transition:width 0.4s;
+                "></div>
+              </div>
+            </div>
+
+            <!-- Preview zone (hidden until parsed) -->
+            <div id="pdf-preview" style="display:none;margin-top:16px;">
+              <div style="font-size:13px;font-weight:700;color:#4C1D95;margin-bottom:10px;">Données détectées :</div>
+              <div id="pdf-preview-table" style="
+                max-height:200px;overflow-y:auto;
+                border:1px solid #EDE9FE;border-radius:12px;
+                font-size:13px;
+              "></div>
+            </div>
+
+            <!-- Info message -->
+            <div style="
+              margin-top:16px;padding:12px 16px;
+              background:#FFF7ED;border-radius:12px;
+              border-left:3px solid #F59E0B;
+              font-size:12px;color:#92400E;line-height:1.5;
+            ">
+              <b>Conseil :</b> L'analyse fonctionne mieux avec les PDFs exportés depuis The Miracle Lab. Pour d'autres PDFs, assurez-vous que les noms d'ingrédients et pourcentages sont lisibles.
+            </div>
+
+            <!-- Buttons -->
+            <div style="display:flex;gap:12px;margin-top:20px;">
+              <button id="pdf-cancel-btn" style="
+                flex:1;padding:12px;border-radius:12px;
+                border:2px solid #E9D5FF;background:#fff;
+                color:#7C3AED;font-weight:700;font-size:14px;cursor:pointer;
+              ">Annuler</button>
+              <button id="pdf-import-btn" style="
+                flex:2;padding:12px;border-radius:12px;
+                border:none;background:#EDE9FE;
+                color:#A78BFA;font-weight:700;font-size:14px;cursor:not-allowed;
+              " disabled>Importer dans le calculateur</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+
+      // Parsed data holder
+      let parsedData = null;
+
+      // Close handlers
+      const closeModal = () => overlay.remove();
+      document.getElementById('pdf-import-close').addEventListener('click', closeModal);
+      document.getElementById('pdf-cancel-btn').addEventListener('click', closeModal);
+      overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+
+      // Drag & drop
+      const dropZone = document.getElementById('pdf-drop-zone');
+      dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.background='#EDE9FE'; });
+      dropZone.addEventListener('dragleave', () => { dropZone.style.background='#FAFAFF'; });
+      dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.style.background='#FAFAFF'; const f = e.dataTransfer.files[0]; if (f && f.type==='application/pdf') handlePdfFile(f); });
+
+      // File input
+      document.getElementById('pdf-file-input').addEventListener('change', e => {
+        const f = e.target.files[0];
+        if (f) handlePdfFile(f);
+      });
+
+      // Handle PDF file
+      function setProgress(pct, text) {
+        document.getElementById('pdf-progress-fill').style.width = pct + '%';
+        if (text) document.getElementById('pdf-status-text').textContent = text;
       }
+
+      async function handlePdfFile(file) {
+        // Show status
+        document.getElementById('pdf-drop-zone').style.display = 'none';
+        document.getElementById('pdf-status').style.display = 'block';
+        document.getElementById('pdf-preview').style.display = 'none';
+        parsedData = null;
+        enableImportBtn(false);
+
+        try {
+          setProgress(20, 'Lecture du PDF…');
+          const arrayBuffer = await file.arrayBuffer();
+          
+          setProgress(40, 'Extraction du texte…');
+          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+          let fullText = '';
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            const pageText = content.items.map(item => item.str).join(' ');
+            fullText += pageText + '\n';
+          }
+
+          setProgress(70, 'Analyse des ingrédients…');
+          const result = parsePdfText(fullText);
+          parsedData = result;
+
+          setProgress(100, 'Analyse terminée.');
+          document.getElementById('pdf-status-icon').innerHTML = '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+
+          // Show preview
+          showPreview(result);
+
+          if (result.ingredients.length > 0) {
+            enableImportBtn(true);
+          } else {
+            document.getElementById('pdf-status-text').textContent = 'Aucun ingrédient détecté dans ce PDF. Essayez un PDF exporté depuis The Miracle Lab.';
+          }
+        } catch (err) {
+          console.error('PDF parse error:', err);
+          document.getElementById('pdf-status-icon').innerHTML = '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+          document.getElementById('pdf-status-text').textContent = 'Erreur lors de la lecture du PDF. Vérifiez que le fichier n\'est pas protégé.';
+        }
+      }
+
+      function enableImportBtn(enabled) {
+        const btn = document.getElementById('pdf-import-btn');
+        if (enabled) {
+          btn.disabled = false;
+          btn.style.background = 'linear-gradient(135deg,#7C3AED,#A855F7)';
+          btn.style.color = '#fff';
+          btn.style.cursor = 'pointer';
+        } else {
+          btn.disabled = true;
+          btn.style.background = '#EDE9FE';
+          btn.style.color = '#A78BFA';
+          btn.style.cursor = 'not-allowed';
+        }
+      }
+
+      function showPreview(data) {
+        const preview = document.getElementById('pdf-preview');
+        const table = document.getElementById('pdf-preview-table');
+        preview.style.display = 'block';
+
+        if (data.ingredients.length === 0) {
+          table.innerHTML = '<div style="padding:12px;text-align:center;color:#8B7CC8;">Aucun ingrédient détecté</div>';
+          return;
+        }
+
+        const rows = data.ingredients.map(ing => `
+          <div style="display:grid;grid-template-columns:1fr 60px 60px 70px;gap:4px;padding:8px 12px;border-bottom:1px solid #F3F0FF;align-items:center;">
+            <div style="font-weight:600;color:#1C0F32;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(ing.name)}</div>
+            <div style="text-align:right;color:#7C3AED;font-weight:700;">${ing.pct ? ing.pct + '%' : '—'}</div>
+            <div style="text-align:right;color:#0E7490;font-weight:600;">${ing.weight ? ing.weight + 'g' : '—'}</div>
+            <div style="text-align:right;color:#B45309;font-weight:600;font-size:12px;">${ing.cost ? ing.cost + ' FCFA' : '—'}</div>
+          </div>
+        `).join('');
+
+        table.innerHTML = `
+          <div style="display:grid;grid-template-columns:1fr 60px 60px 70px;gap:4px;padding:8px 12px;background:#F5F3FF;border-radius:11px 11px 0 0;">
+            <div style="font-size:11px;font-weight:700;color:#7C3AED;text-transform:uppercase;">Ingrédient</div>
+            <div style="font-size:11px;font-weight:700;color:#7C3AED;text-align:right;">%</div>
+            <div style="font-size:11px;font-weight:700;color:#0E7490;text-align:right;">Poids</div>
+            <div style="font-size:11px;font-weight:700;color:#B45309;text-align:right;">Coût/kg</div>
+          </div>
+          ${rows}
+        `;
+
+        if (data.formulaName) {
+          document.getElementById('pdf-status-text').textContent = `"${data.formulaName}" — ${data.ingredients.length} ingrédient(s) trouvé(s)`;
+        } else {
+          document.getElementById('pdf-status-text').textContent = `${data.ingredients.length} ingrédient(s) trouvé(s)`;
+        }
+      }
+
+      // ─── PDF Text Parser ───────────────────────────────────────────────────
+      function parsePdfText(text) {
+        const result = { formulaName: '', formulaType: '', totalWeight: 0, ingredients: [], costs: {} };
+
+        // Detect formula name (Miracle Lab PDF format: line with "Formule :" or "Nom :")
+        const nameMatch = text.match(/(?:Formule\s*:|Nom\s*:|Formula\s*:)\s*([^\n\r]+)/i);
+        if (nameMatch) result.formulaName = nameMatch[1].trim();
+
+        // Detect total weight
+        const weightMatch = text.match(/(?:Poids\s+(?:du\s+)?lot|Total\s+Weight|Lot\s*:)\s*[:\-]?\s*([\d.,]+)\s*g/i);
+        if (weightMatch) result.totalWeight = parseFloat(weightMatch[1].replace(',', '.')) || 0;
+
+        // ── Strategy 1: Parse Miracle Lab exported PDF table format ──
+        // Looks for lines: IngredientName [phase?] XX.XX% XXXX.Xg [cost?]
+        // Flexible regex to match ingredient rows
+        const ingPatterns = [
+          // Pattern: "Name   Phase   XX%   XX.Xg   XXXX FCFA"
+          /([A-Za-zÀ-ÿ'\(\)\-\.\s]+?)\s+(?:(AQUEUSE|HUILEUSE|REFROIDISSEMENT|PHASE[_\s]?[ABC])\s+)?([\d]{1,3}(?:[.,]\d{1,4})?)\s*%\s*([\d]+(?:[.,]\d+)?)\s*g(?:\s+([\d\s,]+)\s*(?:FCFA|CFA|F\.CFA|\.)?)?/gi,
+          // Pattern: "Name   XX.XX%" (simple)
+          /^([A-Za-zÀ-ÿ\(\)'\-\.\s]{3,45})\s+([\d]{1,3}(?:[.,]\d{1,4})?)\s*%/gmi,
+        ];
+
+        // Phase keywords detector
+        function detectPhase(name, phaseTxt) {
+          if (phaseTxt) {
+            const p = phaseTxt.toUpperCase().replace(/\s/g, '_');
+            if (p.includes('HUIL') || p.includes('PHASE_B')) return 'HUILEUSE';
+            if (p.includes('REFR') || p.includes('PHASE_C')) return 'REFROIDISSEMENT';
+            return 'AQUEUSE';
+          }
+          const n = name.toLowerCase();
+          // Guess phase by common ingredients
+          if (/huile|beurre|btms|cire|olivem|ceto|alcool c[ée]|émulsifiant|émulsif/i.test(n)) return 'HUILEUSE';
+          if (/conserv|panthénol|pant|naticide|cosgard|geogard|vitamine|essential|fragrance|parfum|extrait|niacinam|séricine|soie|allantoïne/i.test(n)) return 'REFROIDISSEMENT';
+          return 'AQUEUSE';
+        }
+
+        // Try Strategy 1 — full table row
+        let matches1 = [...text.matchAll(ingPatterns[0])];
+        if (matches1.length > 0) {
+          matches1.forEach(m => {
+            const name = m[1].trim().replace(/\s+/g, ' ');
+            if (!name || name.length < 2 || /^(phase|total|eau distillée auto|inci|nom|poids|formule|catégorie|type)/i.test(name)) return;
+            const phaseTxt = m[2] || '';
+            const pct = m[3] ? m[3].replace(',', '.') : '';
+            const weight = m[4] ? m[4].replace(',', '.') : '';
+            const costRaw = m[5] ? m[5].replace(/\s/g, '').replace(',', '.') : '';
+            const cost = costRaw ? parseFloat(costRaw) : null;
+            const phase = detectPhase(name, phaseTxt);
+
+            result.ingredients.push({ name, phase, pct, weight, cost });
+            if (cost) result.costs[name] = cost;
+          });
+        }
+
+        // Try Strategy 2 — simple % lines if nothing found
+        if (result.ingredients.length === 0) {
+          let matches2 = [...text.matchAll(ingPatterns[1])];
+          matches2.forEach(m => {
+            const name = m[1].trim().replace(/\s+/g, ' ');
+            if (!name || name.length < 2 || /^(phase|total|eau distillée auto|inci|nom|poids|formule|catégorie|type)/i.test(name)) return;
+            const pct = m[2] ? m[2].replace(',', '.') : '';
+            const phase = detectPhase(name, '');
+            result.ingredients.push({ name, phase, pct, weight: '', cost: null });
+          });
+        }
+
+        // Detect auto water row and exclude it (it's computed automatically)
+        result.ingredients = result.ingredients.filter(i => !/^eau distillée$/i.test(i.name.trim()) && !/auto/i.test(i.name.trim()));
+
+        return result;
+      }
+
+      // ─── Import Button ─────────────────────────────────────────────────────
+      document.getElementById('pdf-import-btn').addEventListener('click', () => {
+        if (!parsedData || parsedData.ingredients.length === 0) return;
+
+        // Group ingredients by phase
+        const newPhases = {};
+        let idCounter = Date.now();
+
+        parsedData.ingredients.forEach(ing => {
+          const pk = ing.phase || 'AQUEUSE';
+          if (!newPhases[pk]) newPhases[pk] = [];
+          newPhases[pk].push({
+            id: idCounter++,
+            name: ing.name,
+            pct: String(parseFloat(ing.pct) || '')
+          });
+        });
+
+        // Apply to state
+        state.phases = Object.keys(newPhases).length > 0 ? newPhases : state.phases;
+
+        if (parsedData.formulaName) state.formulaName = parsedData.formulaName;
+        if (parsedData.totalWeight > 0) state.totalWeight = parsedData.totalWeight;
+
+        // Apply costs
+        Object.entries(parsedData.costs).forEach(([name, cost]) => {
+          if (cost > 0) state.costs[name] = cost;
+        });
+
+        // Show cost panel if any costs were detected
+        if (Object.keys(parsedData.costs).length > 0) state.showCost = true;
+
+        pushHistory();
+        closeModal();
+        switchTab('calculator');
+        render();
+        showToast(`✅ ${parsedData.ingredients.length} ingrédient(s) importé(s) depuis le PDF !`);
+      });
     }
 
     function selectProductType(val) {
       state.skeletonType = val;
+      state.showTypeDropdown = false;
       const isSkincare = window._currentCategory === 'skincare';
       const arr = isSkincare ? SKINCARE_TYPES : HAIRCARE_TYPES;
       const found = arr.find(t => t.value === val);
@@ -2612,13 +3512,37 @@
     }
 
     function addToLibrary() {
-      const n = state.libNewName.trim();
+      const nameEl = document.getElementById("lib-new-name");
+      const noteEl = document.getElementById("lib-new-note");
+      const phaseEl = document.getElementById("lib-new-phase");
+
+      const n = (nameEl ? nameEl.value : state.libNewName).trim();
       if (!n) return;
-      const ph = state.libNewPhase || state.libTab;
+
+      const noteText = (noteEl ? noteEl.value : state.libNewNote).trim();
+      const ph = (phaseEl ? phaseEl.value : state.libNewPhase) || state.libTab || 'AQUEUSE';
+
+      if (!state.library[ph]) {
+        state.library[ph] = {};
+      }
+
       const groups = state.library[ph];
       const groupKey = "✨ Mes Ingrédients Personnalisés";
       if (!groups[groupKey]) groups[groupKey] = [];
-      groups[groupKey].unshift({ name: n, note: state.libNewNote.trim() || "Ingrédient personnalisé" });
+
+      const newItem = {
+        name: n,
+        phase: ph,
+        note: noteText || "Ingrédient personnalisé",
+        isCustom: true
+      };
+
+      // Placer tout en haut de la liste du groupe d'ingrédients personnalisés de la phase
+      groups[groupKey].unshift(newItem);
+
+      // Basculer directement sur l'onglet de la phase sélectionnée et réinitialiser la recherche
+      state.libTab = ph;
+      state.libSearch = "";
 
       // Save to Backend Database asynchronously
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -2633,9 +3557,16 @@
           body: JSON.stringify({
             nom: n,
             phase: ph,
-            inci: state.libNewNote.trim() || null
+            inci: noteText || null
           })
-        }).catch(err => console.log('Ingrédient sauvegardé localement:', err));
+        })
+        .then(r => r.json())
+        .then(data => {
+          if (data.ingredient && data.ingredient.id) {
+            newItem.id = data.ingredient.id;
+          }
+        })
+        .catch(err => console.log('Ingrédient sauvegardé localement:', err));
       }
 
       state.libNewName = ""; state.libNewNote = ""; state.libAdding = false;
@@ -2645,10 +3576,27 @@
 
     function deleteFromLibrary(phase, name) {
       const groups = state.library[phase];
+      let targetId = null;
+
       for (const g of Object.keys(groups)) {
+        const item = (groups[g] || []).find(i => i.name === name);
+        if (item && item.id) targetId = item.id;
         groups[g] = groups[g].filter(i => i.name !== name);
       }
       render();
+
+      if (targetId) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (csrfToken) {
+          fetch(`/ingredients/${targetId}`, {
+            method: 'DELETE',
+            headers: {
+              'X-CSRF-TOKEN': csrfToken,
+              'Accept': 'application/json'
+            }
+          }).catch(err => console.error('Erreur suppression ingrédient:', err));
+        }
+      }
     }
 
     // 3. Event bindings
@@ -2719,10 +3667,36 @@
         lotInput.addEventListener("keydown", e => { if (e.key === "Enter") e.target.blur(); });
       }
 
-      // Dropdown product type select
-      document.getElementById("type-dropdown-select")?.addEventListener("change", e => {
-        selectProductType(e.target.value);
+      // Custom Product Type Dropdown Toggle
+      const typeTrigger = document.getElementById("type-dropdown-trigger");
+      if (typeTrigger) {
+        typeTrigger.addEventListener("click", e => {
+          e.preventDefault();
+          e.stopPropagation();
+          state.showTypeDropdown = !state.showTypeDropdown;
+          render();
+        });
+      }
+
+      // Custom Product Type Selection
+      document.querySelectorAll(".type-dropdown-item").forEach(item => {
+        item.addEventListener("click", e => {
+          const val = e.currentTarget.dataset.value;
+          state.showTypeDropdown = false;
+          selectProductType(val);
+        });
       });
+
+      // Close Type Dropdown on clicking outside
+      if (state.showTypeDropdown) {
+        document.addEventListener("click", function typeDdClose(e) {
+          if (!e.target.closest(".type-dropdown-wrap")) {
+            state.showTypeDropdown = false;
+            render();
+            document.removeEventListener("click", typeDdClose);
+          }
+        });
+      }
 
       // Undo button
       document.getElementById("btn-undo")?.addEventListener("click", undo);
@@ -2903,6 +3877,11 @@
         libSearchEl.addEventListener("blur", () => render());
       }
       document.querySelectorAll(".del-lib-btn").forEach(el => el.addEventListener("click", e => deleteFromLibrary(e.currentTarget.dataset.libphase, e.currentTarget.dataset.libname)));
+      document.querySelectorAll(".edit-lib-btn").forEach(el => el.addEventListener("click", e => openEditModal(e.currentTarget.dataset.libphase, e.currentTarget.dataset.libname)));
+      document.getElementById("lib-edit-confirm")?.addEventListener("click", saveEditedIngredient);
+      document.getElementById("lib-edit-cancel")?.addEventListener("click", () => { state.libEditing = null; render(); });
+      document.getElementById("edit-ing-overlay")?.addEventListener("mousedown", e => { if (e.target.id === "edit-ing-overlay") { state.libEditing = null; render(); } });
+
       document.querySelectorAll(".ing-info-btn").forEach(el => el.addEventListener("click", e => { e.stopPropagation(); state.showIngSheet = e.currentTarget.dataset.ingname; render(); }));
       document.getElementById("sheet-close")?.addEventListener("click", () => { state.showIngSheet = null; render(); });
       document.getElementById("sheet-overlay")?.addEventListener("mousedown", e => { if (e.target.id === "sheet-overlay") { state.showIngSheet = null; render(); } });

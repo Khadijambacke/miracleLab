@@ -1,0 +1,2001 @@
+{
+  "library": {
+    "AQUEUSE": {
+      "Tensioactifs": [
+        {
+          "name": "Texapon N70",
+          "note": "SLES 70%, moussant doux, nettoyant polyvalent — BASF",
+          "minPct": 5,
+          "maxPct": 20
+        },
+        {
+          "name": "Texapon NSO",
+          "note": "SLES liquide, moussant, formules shampoing",
+          "minPct": 5,
+          "maxPct": 20
+        },
+        {
+          "name": "Texapon ASV",
+          "note": "AOS — Tensioactif doux, bonne mousse froide",
+          "minPct": 5,
+          "maxPct": 15
+        },
+        {
+          "name": "Cocamidopropyl Bétaïne (CAPB)",
+          "note": "Amphotère, doux, épaississant mousse",
+          "maxPct": 10
+        },
+        {
+          "name": "Coco Glucoside",
+          "note": "Naturel, très doux, bonne mousse",
+          "maxPct": 15
+        },
+        {
+          "name": "Decyl Glucoside",
+          "note": "Naturel, doux, pour peaux sensibles",
+          "maxPct": 15
+        },
+        {
+          "name": "Lauryl Glucoside",
+          "note": "Naturel, bon pouvoir moussant",
+          "maxPct": 15
+        },
+        {
+          "name": "Caprylyl/Capryl Glucoside",
+          "note": "Ultra doux, peau et cheveux sensibles",
+          "maxPct": 15
+        },
+        {
+          "name": "Sodium Cocoyl Isethionate (SCI)",
+          "note": "Solide ou poudre, ultra doux, riche mousse",
+          "maxPct": 40
+        },
+        {
+          "name": "Sodium Lauryl Sulfoacetate (SLSA)",
+          "note": "Poudre, très doux, mousse dense et crémeuse",
+          "maxPct": 20
+        },
+        {
+          "name": "Disodium Cocoamphodiacetate",
+          "note": "Amphotère doux, anti-irritant",
+          "maxPct": 10
+        },
+        {
+          "name": "Cocamide DEA",
+          "note": "Épaississant mousse, stabilisant",
+          "maxPct": 5
+        },
+        {
+          "name": "PEG-7 Glyceryl Cocoate",
+          "note": "Émulsifiant doux, conditionneur",
+          "maxPct": 5
+        },
+        {
+          "name": "Sodium Cocoyl Glutamate",
+          "note": "Aminoacide, très doux, pH compatible",
+          "maxPct": 20
+        },
+        {
+          "name": "Sodium Lauroyl Sarcosinate",
+          "note": "Doux, conditionneur, anti-résidu",
+          "maxPct": 15
+        },
+        {
+          "name": "Sodium Cocoyl Apple Amino Acids",
+          "note": "Derivé de pomme, ultra doux, brillance",
+          "maxPct": 15
+        },
+        {
+          "name": "Betaine (tensioactive)",
+          "note": "Amphotère naturelle, mousse stable",
+          "maxPct": 10
+        },
+        {
+          "name": "Polyglucose/Lactylate Blend",
+          "note": "Naturel, doux, conditionneur in-shower",
+          "maxPct": 10
+        }
+      ],
+      "Macérats & Poudres Indiennes": [
+        {
+          "name": "Macérat de Shikakai",
+          "note": "Nettoyant doux naturel, brillance, démêlant"
+        },
+        {
+          "name": "Macérat de Reetha",
+          "note": "Tensioactif naturel, moussant, anti-pelliculaire"
+        },
+        {
+          "name": "Macérat d'Amla",
+          "note": "Stimulant croissance, anti-chute, riche en Vit C"
+        },
+        {
+          "name": "Macérat de Brahmi",
+          "note": "Fortifiant, stimulant follicule, épaississement"
+        },
+        {
+          "name": "Macérat de Bhringraj",
+          "note": "Anti-chute puissant, repousse, brillance"
+        },
+        {
+          "name": "Macérat de Neem",
+          "note": "Antibactérien, anti-pelliculaire, cuir chevelu sain"
+        },
+        {
+          "name": "Macérat de Tulsi (Basilic Sacré)",
+          "note": "Purifiant, fortifiant, anti-inflammatoire"
+        },
+        {
+          "name": "Macérat de Methi (Fenugrec)",
+          "note": "Stimulant croissance, hydratant, brillance"
+        },
+        {
+          "name": "Macérat de Henné Neutre",
+          "note": "Fortifiant, gainant, brillance sans couleur"
+        },
+        {
+          "name": "Macérat de Kalpi Tone",
+          "note": "Mélange indien anti-chute, repousse"
+        },
+        {
+          "name": "Macérat de Narayana",
+          "note": "Ayurvédique, stimulant, nourrissant"
+        },
+        {
+          "name": "Macérat de Vasaka",
+          "note": "Respiratoire, antiseptique, anti-pelliculaire"
+        }
+      ],
+      "Poudres & Herbes Capillaires": [
+        {
+          "name": "Poudre d'Amla",
+          "note": "Riche en Vit C, anti-oxydant, stimulant croissance",
+          "maxPct": 5
+        },
+        {
+          "name": "Poudre de Shikakai",
+          "note": "Nettoyant naturel, démêlant, brillance",
+          "maxPct": 5
+        },
+        {
+          "name": "Poudre de Reetha",
+          "note": "Moussant naturel, anti-pelliculaire",
+          "maxPct": 5
+        },
+        {
+          "name": "Poudre de Brahmi",
+          "note": "Fortifiante, épaississement, croissance",
+          "maxPct": 5
+        },
+        {
+          "name": "Poudre de Bhringraj",
+          "note": "Anti-chute n°1 en Ayurveda, repousse",
+          "maxPct": 5
+        },
+        {
+          "name": "Poudre de Neem",
+          "note": "Antibactérienne, anti-pelliculaire, purifiante",
+          "maxPct": 3
+        },
+        {
+          "name": "Poudre de Henné Neutre",
+          "note": "Gainante, protectrice, brillance",
+          "maxPct": 10
+        },
+        {
+          "name": "Poudre de Moringa",
+          "note": "Riche en minéraux, fortifiante, nourrissante",
+          "maxPct": 5
+        },
+        {
+          "name": "Poudre de Fenugrec",
+          "note": "Hydratante, stimulante, glissante, anti-chute",
+          "maxPct": 5
+        },
+        {
+          "name": "Poudre d'Ortie",
+          "note": "Riche en silice, fortifiante, anti-chute, reminéralisante",
+          "maxPct": 5
+        },
+        {
+          "name": "Poudre de Prêle",
+          "note": "Très riche en silice, renforce la fibre, brillance",
+          "maxPct": 5
+        },
+        {
+          "name": "Poudre de Graines de Nigelle",
+          "note": "Anti-inflammatoire, croissance, thymoquinone",
+          "maxPct": 3
+        },
+        {
+          "name": "Poudre de Gingembre",
+          "note": "Stimulant microcirculation, anti-chute, réchauffant",
+          "maxPct": 3
+        },
+        {
+          "name": "Poudre d'Ail",
+          "note": "Riche en soufre, stimulant puissant, anti-pelliculaire",
+          "maxPct": 2
+        },
+        {
+          "name": "Poudre de Clou de Girofle",
+          "note": "Antibactérien puissant, stimulant, anti-fongique",
+          "maxPct": 1
+        },
+        {
+          "name": "Poudre de Guimauve",
+          "note": "Adoucissante, glissante, démêlante",
+          "maxPct": 5
+        },
+        {
+          "name": "Poudre de Romarin",
+          "note": "Stimulante, antioxydante, brillance",
+          "maxPct": 3
+        },
+        {
+          "name": "Poudre de Lavande",
+          "note": "Apaisante, antibactérienne, cuir chevelu sensible",
+          "maxPct": 3
+        },
+        {
+          "name": "Poudre d'Hibiscus",
+          "note": "Brillance, définition boucles, adoucissante, riche en vitamine C",
+          "maxPct": 5
+        },
+        {
+          "name": "Poudre de Kalpi Tone",
+          "note": "Mélange anti-chute, fortifiant",
+          "maxPct": 5
+        },
+        {
+          "name": "Poudre de Tulsi",
+          "note": "Purifiante, fortifiante, anti-microbienne",
+          "maxPct": 3
+        },
+        {
+          "name": "Poudre de Curcuma",
+          "note": "Anti-inflammatoire, purifiant cuir chevelu",
+          "maxPct": 2
+        },
+        {
+          "name": "Poudre de Sidr (Lotus Jujubier)",
+          "note": "Nettoyant naturel doux, brillance",
+          "maxPct": 10
+        },
+        {
+          "name": "Poudre de Cannelle",
+          "note": "Stimulante, réchauffante, microcirculation",
+          "maxPct": 1
+        },
+        {
+          "name": "Poudre de Poivre Noir",
+          "note": "Stimulant circulation, repousse, réchauffant",
+          "maxPct": 1
+        },
+        {
+          "name": "Poudre de Cardamome",
+          "note": "Parfum naturel, purifiant, stimulant",
+          "maxPct": 2
+        },
+        {
+          "name": "Poudre de Spiruline",
+          "note": "Riche en protéines, minéraux, antioxydants",
+          "maxPct": 3
+        },
+        {
+          "name": "Poudre de Chlorella",
+          "note": "Détox, reminéralisant, fortifiant",
+          "maxPct": 3
+        },
+        {
+          "name": "Poudre de Papaye",
+          "note": "Enzymes papaine, exfoliation douce cuir chevelu",
+          "maxPct": 3
+        },
+        {
+          "name": "Poudre de Grenade",
+          "note": "Antioxydante, éclat, brillance",
+          "maxPct": 3
+        },
+        {
+          "name": "Poudre de Café",
+          "note": "Stimulant follicule, anti-chute, antioxydant",
+          "maxPct": 3
+        },
+        {
+          "name": "Poudre de Cacao",
+          "note": "Antioxydant, brillance, parfum naturel",
+          "maxPct": 3
+        },
+        {
+          "name": "Argile Blanche (Kaolin)",
+          "note": "Nettoyante douce, absorbante, non agressive",
+          "maxPct": 10
+        },
+        {
+          "name": "Argile Verte",
+          "note": "Purifiante, détox cuir chevelu gras",
+          "maxPct": 10
+        },
+        {
+          "name": "Argile Rhassoul",
+          "note": "Nettoyante naturelle, brillance, douce",
+          "maxPct": 15
+        },
+        {
+          "name": "Argile Rose",
+          "note": "Très douce, cuir chevelu sensible, démêlante",
+          "maxPct": 10
+        },
+        {
+          "name": "Argile Ghassoul Ultra-Fine",
+          "note": "Texture crémeuse, nettoyage en douceur",
+          "maxPct": 15
+        }
+      ],
+      "Bases Aqueuses": [
+        {
+          "name": "Eau Distillée",
+          "note": "Base aqueuse principale, neutre"
+        },
+        {
+          "name": "Jus d'Aloe Vera",
+          "note": "Hydratant, apaisant, démêlant naturel"
+        },
+        {
+          "name": "Eau de Coco",
+          "note": "Hydratante, riche en minéraux"
+        },
+        {
+          "name": "Eau de Rose",
+          "note": "Hydrolat adoucissant, tonifiant"
+        },
+        {
+          "name": "Hydrolat de Lavande",
+          "note": "Apaisant, antibactérien"
+        },
+        {
+          "name": "Hydrolat de Romarin",
+          "note": "Stimulant croissance, anti-chute"
+        },
+        {
+          "name": "Hydrolat de Camomille",
+          "note": "Apaisant, anti-inflammatoire"
+        },
+        {
+          "name": "Hydrolat de Menthe",
+          "note": "Rafraîchissant, stimulant"
+        },
+        {
+          "name": "Hydrolat d'Ortie",
+          "note": "Fortifiante, riche en silice, anti-chute"
+        },
+        {
+          "name": "Hydrolat de Hibiscus",
+          "note": "Brillance, définition boucles, riche en AHA naturels"
+        },
+        {
+          "name": "Hydrolat de Fenugrec",
+          "note": "Stimulant, épaississement, croissance"
+        },
+        {
+          "name": "Hydrolat d'Ylang-Ylang",
+          "note": "Séborégulateur, parfum floral naturel"
+        },
+        {
+          "name": "Hydrolat de Géranium",
+          "note": "Équilibrant, régénérant, anti-chute"
+        },
+        {
+          "name": "Hydrolat de Basilic",
+          "note": "Purifiant, anti-oxydant, stimulant"
+        },
+        {
+          "name": "Thé Vert Infusé",
+          "note": "Antioxydant puissant, anti-chute, brillance"
+        },
+        {
+          "name": "Décoction de Romarin",
+          "note": "Stimulante, riche en antioxydants"
+        },
+        {
+          "name": "Décoction de Fenugrec",
+          "note": "Épaississement, croissance, glissante"
+        },
+        {
+          "name": "Eau de Riz",
+          "note": "Hydratante, protéines légères, brillance"
+        },
+        {
+          "name": "Eau de Fleur d'Oranger",
+          "note": "Adoucissante, parfum naturel, relaxante"
+        }
+      ],
+      "Humectants": [
+        {
+          "name": "Glycérine Végétale",
+          "note": "Humectant puissant",
+          "maxPct": 10
+        },
+        {
+          "name": "Bétaïne",
+          "note": "Humectant doux, anti-frisottis",
+          "maxPct": 5
+        },
+        {
+          "name": "Sodium PCA",
+          "note": "NMF naturel, hydratation durable",
+          "maxPct": 5
+        },
+        {
+          "name": "Acide Hyaluronique",
+          "note": "Hydratation intense, filmogène",
+          "maxPct": 2
+        },
+        {
+          "name": "Sodium Lactate",
+          "note": "Humectant, ajusteur pH naturel",
+          "maxPct": 3
+        },
+        {
+          "name": "Propanediol (1,3)",
+          "note": "Humectant doux, solvant naturel de maïs",
+          "maxPct": 10
+        },
+        {
+          "name": "Tréhalose",
+          "note": "Sucre protecteur, hydratation durable",
+          "maxPct": 5
+        },
+        {
+          "name": "Sorbitol",
+          "note": "Humectant naturel, hydratation",
+          "maxPct": 5
+        },
+        {
+          "name": "Jus de Gombo",
+          "note": "Humectant naturel, glissant, définition boucles",
+          "maxPct": 30
+        },
+        {
+          "name": "Gel de Gombo",
+          "note": "Humectant gélifiant, slip, démêlant naturel",
+          "maxPct": 20
+        },
+        {
+          "name": "Gel de Lin",
+          "note": "Humectant gélifiant, définition, anti-frisottis",
+          "maxPct": 20
+        },
+        {
+          "name": "Gel d'Aloe Vera",
+          "note": "Hydratant, apaisant, filmogène léger",
+          "maxPct": 30
+        },
+        {
+          "name": "Miel",
+          "note": "Humectant naturel, anti-microbien, brillance",
+          "maxPct": 5
+        },
+        {
+          "name": "Urée (basse dose)",
+          "note": "Humectant puissant, kératolytique doux",
+          "maxPct": 3
+        }
+      ],
+      "Épaississants": [
+        {
+          "name": "Gomme de Guar",
+          "note": "Épaississant, démêlant",
+          "maxPct": 1
+        },
+        {
+          "name": "Gomme Xanthane",
+          "note": "Épaississant, stabilisant",
+          "maxPct": 0.5
+        },
+        {
+          "name": "Hydroxyéthylcellulose",
+          "note": "Épaississant naturel cellulosique",
+          "maxPct": 2
+        },
+        {
+          "name": "Gomme de Caroube",
+          "note": "Épaississant, effet soyeux",
+          "maxPct": 1
+        },
+        {
+          "name": "Gomme de Tara",
+          "note": "Épaississant naturel, doux",
+          "maxPct": 1
+        },
+        {
+          "name": "Sclerotium Gum",
+          "note": "Épaississant naturel fermenté, gel lisse",
+          "maxPct": 1
+        },
+        {
+          "name": "Carraghénane (Carrageenan)",
+          "note": "Gélifiant naturel d'algues marines",
+          "maxPct": 1
+        },
+        {
+          "name": "HPMC",
+          "note": "Hydroxypropyl Methylcellulose, épaississant stable",
+          "maxPct": 2
+        }
+      ],
+      "Actifs Capillaires": [
+        {
+          "name": "Panthénol (B5)",
+          "note": "Hydratant, renforce et répare la fibre",
+          "maxPct": 5
+        },
+        {
+          "name": "Niacinamide",
+          "note": "Anti-chute, régule sébum, cuir chevelu sain",
+          "maxPct": 5
+        },
+        {
+          "name": "Biotine (B7)",
+          "note": "Vitamine B7, croissance, fortifiant",
+          "maxPct": 2
+        },
+        {
+          "name": "MSM (Méthylsulfonylméthane)",
+          "note": "Soufre organique, croissance, élasticité",
+          "maxPct": 3
+        },
+        {
+          "name": "Inositol",
+          "note": "Répare et renforce la fibre capillaire",
+          "maxPct": 2
+        },
+        {
+          "name": "Acide Salicylique",
+          "note": "Exfoliant cuir chevelu, anti-pelliculaire",
+          "maxPct": 2
+        },
+        {
+          "name": "Extrait d'Hibiscus",
+          "note": "Brillance, définition, riche en AHA naturels",
+          "maxPct": 5
+        },
+        {
+          "name": "Extrait de Thé Vert",
+          "note": "Antioxydant, anti-chute, stimulant",
+          "maxPct": 3
+        },
+        {
+          "name": "Extrait de Romarin CO2",
+          "note": "Antioxydant concentré, anti-chute",
+          "maxPct": 1
+        },
+        {
+          "name": "Allantoïne",
+          "note": "Cicatrisant, apaisant, anti-irritant",
+          "maxPct": 0.5
+        },
+        {
+          "name": "Acide Folique (B9)",
+          "note": "Croissance, métabolisme cellulaire",
+          "maxPct": 1
+        },
+        {
+          "name": "Resveratrol",
+          "note": "Antioxydant puissant, anti-âge cuir chevelu",
+          "maxPct": 1
+        },
+        {
+          "name": "Kératine Hydrolysée",
+          "note": "Reconstruction protéique, lissage",
+          "maxPct": 5
+        }
+      ]
+    },
+    "HUILEUSE": {
+      "Macérats Huileux & Herbes": [
+        {
+          "name": "Macérat Huileux de Bhringraj",
+          "note": "Anti-chute, repousse, fortifiant — infusé dans huile"
+        },
+        {
+          "name": "Macérat Huileux de Brahmi",
+          "note": "Fortifiant follicule, croissance, stimulant"
+        },
+        {
+          "name": "Macérat Huileux de Neem",
+          "note": "Antibactérien, anti-pelliculaire, cuir chevelu"
+        },
+        {
+          "name": "Macérat Huileux d'Amla",
+          "note": "Antioxydant, brillance, stimulant croissance"
+        },
+        {
+          "name": "Macérat Huileux de Romarin",
+          "note": "Stimulant microcirculation, anti-chute"
+        },
+        {
+          "name": "Macérat Huileux d'Ortie",
+          "note": "Fortifiant, riche en silice, anti-chute"
+        },
+        {
+          "name": "Macérat Huileux de Prêle",
+          "note": "Riche en silice, renforce la fibre, brillance"
+        },
+        {
+          "name": "Macérat Huileux de Fenugrec",
+          "note": "Stimulant, hydratant, brillance, anti-chute"
+        },
+        {
+          "name": "Macérat Huileux de Nigelle",
+          "note": "Anti-inflammatoire, croissance, antibactérien"
+        },
+        {
+          "name": "Macérat Huileux de Gingembre",
+          "note": "Stimulant puissant, microcirculation, repousse",
+          "maxPct": 5
+        },
+        {
+          "name": "Macérat Huileux d'Ail",
+          "note": "Riche en soufre, anti-chute, stimulant",
+          "maxPct": 3
+        },
+        {
+          "name": "Macérat Huileux de Clou de Girofle",
+          "note": "Antibactérien, stimulant, anti-fongique",
+          "maxPct": 2
+        },
+        {
+          "name": "Macérat Huileux de Piment de Cayenne",
+          "note": "Stimulant circulation, repousse accélérée",
+          "maxPct": 5
+        },
+        {
+          "name": "Macérat Huileux de Lavande",
+          "note": "Apaisant, cuir chevelu sensible, équilibrant"
+        },
+        {
+          "name": "Macérat Huileux de Moringa",
+          "note": "Nourrissant, protecteur, riche en minéraux"
+        },
+        {
+          "name": "Macérat Huileux de Curcuma",
+          "note": "Anti-inflammatoire, purifiant, cicatrisant"
+        },
+        {
+          "name": "Macérat Huileux de Café",
+          "note": "Stimulant follicule, anti-chute, antioxydant"
+        },
+        {
+          "name": "Macérat Huileux de Cannelle",
+          "note": "Stimulant circulation, réchauffant",
+          "maxPct": 2
+        },
+        {
+          "name": "Macérat Huileux de Kalpi Tone",
+          "note": "Mélange ayurvédique anti-chute, repousse"
+        },
+        {
+          "name": "Macérat Huileux de Tulsi",
+          "note": "Purifiant, fortifiant, anti-microbien"
+        },
+        {
+          "name": "Macérat Huileux de Vanille",
+          "note": "Adoucissant, nourrissant, parfum naturel"
+        },
+        {
+          "name": "Macérat Huileux de Sauge",
+          "note": "Séborégulateur, anti-pelliculaire, équilibrant"
+        },
+        {
+          "name": "Macérat Huileux de Thym",
+          "note": "Antibactérien, stimulant, anti-pelliculaire"
+        }
+      ],
+      "Émulsifiants": [
+        {
+          "name": "BTMS-50",
+          "note": "Émulsifiant cationique, démêlant, conditionneur",
+          "minPct": 2,
+          "maxPct": 8
+        },
+        {
+          "name": "BTMS-25",
+          "note": "Émulsifiant cationique léger, conditionneur",
+          "minPct": 2,
+          "maxPct": 10
+        },
+        {
+          "name": "Polawax",
+          "note": "Émulsifiant non-ionique, stable, polyvalent",
+          "minPct": 3,
+          "maxPct": 10
+        },
+        {
+          "name": "Olivem-1000",
+          "note": "Émulsifiant naturel d'olive, texture légère",
+          "minPct": 3,
+          "maxPct": 8
+        },
+        {
+          "name": "Emulsifying Wax NF",
+          "note": "Émulsifiant non-ionique standard",
+          "minPct": 3,
+          "maxPct": 10
+        },
+        {
+          "name": "Montanov 68",
+          "note": "Émulsifiant naturel O/W, texture légère",
+          "minPct": 3,
+          "maxPct": 8
+        },
+        {
+          "name": "Montanov 202",
+          "note": "Émulsifiant naturel, émulsion riche",
+          "minPct": 3,
+          "maxPct": 10
+        },
+        {
+          "name": "Sucrose Esters",
+          "note": "Émulsifiant naturel doux, O/W",
+          "minPct": 2,
+          "maxPct": 8
+        },
+        {
+          "name": "Arlacel 165",
+          "note": "Mélange glycol stéarate, texture nacrée",
+          "minPct": 2,
+          "maxPct": 6
+        },
+        {
+          "name": "Glyceryl Stearate",
+          "note": "Co-émulsifiant, texture veloutée",
+          "minPct": 1,
+          "maxPct": 5
+        },
+        {
+          "name": "Glyceryl Stearate SE",
+          "note": "Auto-émulsifiant, stable, polyvalent",
+          "minPct": 2,
+          "maxPct": 6
+        },
+        {
+          "name": "Lecithine de Tournesol",
+          "note": "Émulsifiant naturel, liposomes, pénétration",
+          "minPct": 1,
+          "maxPct": 3
+        },
+        {
+          "name": "Cire d'Abeille (émulsifiante)",
+          "note": "Émulsifiante naturelle W/O, texture épaisse",
+          "minPct": 3,
+          "maxPct": 10
+        },
+        {
+          "name": "Olivem 900",
+          "note": "Émulsifiant W/O naturel, peau sèche",
+          "minPct": 3,
+          "maxPct": 8
+        },
+        {
+          "name": "Tego Care 450",
+          "note": "Co-émulsifiant polyvalent, texture douce",
+          "minPct": 2,
+          "maxPct": 5
+        },
+        {
+          "name": "Ritamulse SCG",
+          "note": "Émulsifiant naturel certifiable, polyvalent",
+          "minPct": 3,
+          "maxPct": 8
+        },
+        {
+          "name": "Aristoflex AVC",
+          "note": "Émulsifiant + épaississant, texture gel-crème",
+          "minPct": 1,
+          "maxPct": 3
+        },
+        {
+          "name": "Sepimax ZEN",
+          "note": "Émulsifiant léger, texture sérum",
+          "minPct": 2,
+          "maxPct": 4
+        },
+        {
+          "name": "Stearic Acid",
+          "note": "Épaississant, co-émulsifiant, texture nacrée",
+          "minPct": 1,
+          "maxPct": 5
+        },
+        {
+          "name": "PEG-100 Stearate",
+          "note": "Co-émulsifiant, stabilisant HLB élevé",
+          "minPct": 1,
+          "maxPct": 4
+        }
+      ],
+      "Alcools Gras": [
+        {
+          "name": "Alcool Cétylique",
+          "note": "Émollient, épaississant, texture crémeuse",
+          "maxPct": 5
+        },
+        {
+          "name": "Alcool Stéarylique",
+          "note": "Émollient lourd, texture crémeuse",
+          "maxPct": 5
+        },
+        {
+          "name": "Alcool Cétéarylique",
+          "note": "Mélange polyvalent, texture douce",
+          "maxPct": 6
+        },
+        {
+          "name": "Acide Stéarique",
+          "note": "Épaississant, texture nacrée, tenue",
+          "maxPct": 5
+        }
+      ],
+      "Huiles Végétales": [
+        {
+          "name": "Huile de Jojoba",
+          "note": "Proche sébum, légère, non grasse"
+        },
+        {
+          "name": "Huile de Coco Vierge",
+          "note": "Pénétrante, anti-casse, protectrice"
+        },
+        {
+          "name": "Huile d'Amande Douce",
+          "note": "Émolliente, adoucissante, légère"
+        },
+        {
+          "name": "Huile de Ricin",
+          "note": "Épaississante, brillance intense",
+          "maxPct": 5
+        },
+        {
+          "name": "Huile de Baobab",
+          "note": "Légère, vitamines A/D/E/F, brillance"
+        },
+        {
+          "name": "Huile d'Argan",
+          "note": "Anti-frisottis, brillance, légère"
+        },
+        {
+          "name": "Huile d'Avocat",
+          "note": "Pénétrante profonde, nourrissante"
+        },
+        {
+          "name": "Huile de Nigelle",
+          "note": "Anti-inflammatoire, croissance",
+          "maxPct": 3
+        },
+        {
+          "name": "Huile de Chanvre",
+          "note": "Oméga 3/6/9 équilibrés, légère"
+        },
+        {
+          "name": "Huile de Marula",
+          "note": "Ultra légère, anti-âge, brillance"
+        },
+        {
+          "name": "Huile de Moringa",
+          "note": "Purifiante, légère, stable"
+        },
+        {
+          "name": "Huile de Camélia",
+          "note": "Brillance, protection thermique, légère"
+        },
+        {
+          "name": "Huile de Pracaxi",
+          "note": "Démêlante naturelle, brillance",
+          "maxPct": 5
+        },
+        {
+          "name": "Huile de Tamanu",
+          "note": "Cicatrisante, cuir chevelu, anti-inflammatoire",
+          "maxPct": 5
+        },
+        {
+          "name": "Huile de Coco Fractionnée",
+          "note": "Ultra légère, stable, pénétrante"
+        },
+        {
+          "name": "Huile de Babassu",
+          "note": "Légère comme le coco, non grasse"
+        },
+        {
+          "name": "Huile de Macadamia",
+          "note": "Proche sébum, émolliente, protectrice"
+        },
+        {
+          "name": "Huile de Noisette",
+          "note": "Légère, astringente douce, pénétrante"
+        },
+        {
+          "name": "Huile de Pépin de Raisin",
+          "note": "Légère, antioxydante, brillance"
+        },
+        {
+          "name": "Huile de Lin",
+          "note": "Riche en oméga-3, anti-inflammatoire"
+        },
+        {
+          "name": "Huile d'Onagre",
+          "note": "Riche en GLA, cuir chevelu inflammé",
+          "maxPct": 5
+        },
+        {
+          "name": "Huile de Bourrache",
+          "note": "GLA élevé, régénérant, anti-chute",
+          "maxPct": 5
+        },
+        {
+          "name": "Huile de Rose Musquée",
+          "note": "Régénérante, anti-âge, cicatrisante",
+          "maxPct": 5
+        },
+        {
+          "name": "Huile de Karanja",
+          "note": "Anti-pelliculaire, protectrice, légère"
+        },
+        {
+          "name": "Huile de Buriti",
+          "note": "Riche en bêta-carotène, protectrice, brillance"
+        },
+        {
+          "name": "Huile d'Abyssinie",
+          "note": "Légèreté extrême, lissage, protection thermique"
+        },
+        {
+          "name": "Huile de Yangu",
+          "note": "Légère, sèche rapidement, anti-inflammatoire"
+        }
+      ],
+      "Beurres Végétaux": [
+        {
+          "name": "Beurre de Karité Brut",
+          "note": "Nourrissant intense, protecteur, riche",
+          "maxPct": 10
+        },
+        {
+          "name": "Beurre de Karité Raffiné",
+          "note": "Plus léger, blanc neutre, texturant",
+          "maxPct": 10
+        },
+        {
+          "name": "Beurre de Cacao",
+          "note": "Occlusif, fondant, protecteur",
+          "maxPct": 5
+        },
+        {
+          "name": "Beurre de Mangue",
+          "note": "Léger, non gras, fondant",
+          "maxPct": 8
+        },
+        {
+          "name": "Beurre de Cupuaçu",
+          "note": "Hydratant intense, émollient, brillance",
+          "maxPct": 8
+        },
+        {
+          "name": "Beurre de Murumuru",
+          "note": "Démêlant naturel, brillance, légère protection",
+          "maxPct": 5
+        },
+        {
+          "name": "Beurre de Kokum",
+          "note": "Ultra-occlusif, durcissant naturel, protection",
+          "maxPct": 5
+        },
+        {
+          "name": "Beurre d'Avocat",
+          "note": "Riche, pénétrant, vitamine E",
+          "maxPct": 8
+        },
+        {
+          "name": "Beurre de Sal",
+          "note": "Similaire au karité, non comédogène",
+          "maxPct": 8
+        },
+        {
+          "name": "Beurre d'Illipé",
+          "note": "Hydratant, lissant, substitut karité",
+          "maxPct": 8
+        },
+        {
+          "name": "Beurre de Mafura",
+          "note": "Africain, riche, antibactérien naturel",
+          "maxPct": 5
+        },
+        {
+          "name": "Beurre de Bacuri",
+          "note": "Brésilien, hydratant intense, réparateur",
+          "maxPct": 5
+        }
+      ],
+      "Cires": [
+        {
+          "name": "Cire d'Abeille",
+          "note": "Épaississant naturel, occlusif, protecteur",
+          "maxPct": 5
+        },
+        {
+          "name": "Cire de Carnauba",
+          "note": "Brillance intense, dure, protection",
+          "maxPct": 3
+        },
+        {
+          "name": "Cire de Candelilla",
+          "note": "Vegan, brillance, dureté similaire abeille",
+          "maxPct": 3
+        },
+        {
+          "name": "Cire de Riz",
+          "note": "Légère, brillance, non comédogène",
+          "maxPct": 3
+        }
+      ],
+      "Silicones": [
+        {
+          "name": "Diméthicone",
+          "note": "Anti-frisottis, protection thermique, brillance",
+          "maxPct": 5
+        },
+        {
+          "name": "Amodimethicone",
+          "note": "Réparation ciblée, brillance, dépôt sélectif",
+          "maxPct": 3
+        }
+      ]
+    },
+    "REFROIDISSEMENT": {
+      "Conservateurs": [
+        {
+          "name": "Conservateur Leucidal SF",
+          "note": "Naturel, fermentation Lactobacillus, actif à froid",
+          "minPct": 1,
+          "maxPct": 4,
+          "phNote": "pH 3.5-5.0"
+        },
+        {
+          "name": "Conservateur Leucidal Liquid",
+          "note": "Naturel, large spectre, doux",
+          "minPct": 1,
+          "maxPct": 3,
+          "phNote": "pH 3.5-5.5"
+        },
+        {
+          "name": "Conservateur Geogard ECT",
+          "note": "Large spectre, naturel, COSMOS validé",
+          "minPct": 0.5,
+          "maxPct": 1.5,
+          "phNote": "pH 3.0-6.0"
+        },
+        {
+          "name": "Conservateur Optiphen Plus",
+          "note": "Large spectre, stable émulsions",
+          "minPct": 0.75,
+          "maxPct": 1.5,
+          "phNote": "pH 4.0-8.0"
+        },
+        {
+          "name": "Conservateur Optiphen NDG",
+          "note": "Naturel dérivé, sans phénoxyéthanol",
+          "minPct": 0.5,
+          "maxPct": 1.5
+        },
+        {
+          "name": "Phénoxyéthanol",
+          "note": "Synthétique efficace, large usage",
+          "minPct": 0.5,
+          "maxPct": 1,
+          "phNote": "pH 3.0-10.0"
+        },
+        {
+          "name": "Éthylhexylglycérine",
+          "note": "Booster conservateur, conditionneur doux",
+          "maxPct": 1
+        },
+        {
+          "name": "Benzoate de Sodium",
+          "note": "Naturel, anti-fongique, anti-levures",
+          "minPct": 0.1,
+          "maxPct": 0.5,
+          "phNote": "pH < 5.0"
+        },
+        {
+          "name": "Sorbate de Potassium",
+          "note": "Naturel, anti-moisissures, anti-levures",
+          "minPct": 0.1,
+          "maxPct": 0.3,
+          "phNote": "pH < 5.5"
+        },
+        {
+          "name": "Benzoate + Sorbate (combo)",
+          "note": "Synergie naturelle très efficace",
+          "minPct": 0.3,
+          "maxPct": 0.8
+        },
+        {
+          "name": "Acide Benzoïque",
+          "note": "Précurseur naturel, anti-fongique",
+          "minPct": 0.1,
+          "maxPct": 0.5,
+          "phNote": "pH < 5.0"
+        },
+        {
+          "name": "Acide Sorbique",
+          "note": "Naturel, anti-levures, anti-moisissures",
+          "minPct": 0.1,
+          "maxPct": 0.3,
+          "phNote": "pH < 6.0"
+        },
+        {
+          "name": "Naticide (Parfum Conservateur)",
+          "note": "Naturel, odeur amande, large spectre",
+          "minPct": 0.5,
+          "maxPct": 1
+        },
+        {
+          "name": "Rokonsal BSB-N",
+          "note": "Naturel, benzylalcool + acide benzoïque",
+          "minPct": 0.5,
+          "maxPct": 1.5
+        },
+        {
+          "name": "Cosgard (Benzylalcool + DHA)",
+          "note": "Naturel, COSMOS, large spectre",
+          "minPct": 0.6,
+          "maxPct": 1,
+          "phNote": "pH 3.0-7.0"
+        },
+        {
+          "name": "Benzylalcool",
+          "note": "Naturel, anti-bactérien, souvent associé",
+          "minPct": 0.5,
+          "maxPct": 1
+        },
+        {
+          "name": "Acide Déhydroacétique (DHA)",
+          "note": "Naturel, anti-fongique, anti-levures",
+          "minPct": 0.1,
+          "maxPct": 0.6,
+          "phNote": "pH < 7.0"
+        },
+        {
+          "name": "AMTicide Coconut",
+          "note": "Naturel dérivé coco, large spectre, COSMOS",
+          "minPct": 0.5,
+          "maxPct": 2
+        },
+        {
+          "name": "Mikrokill COS",
+          "note": "Large spectre, stable aux pH variés",
+          "minPct": 0.5,
+          "maxPct": 1.5
+        },
+        {
+          "name": "Geogard Ultra",
+          "note": "Naturel, ECOCERT, polyvalent",
+          "minPct": 0.5,
+          "maxPct": 1.5
+        }
+      ],
+      "Protéines": [
+        {
+          "name": "Protéines de Riz",
+          "note": "Renforce fibre, anti-casse, légères",
+          "maxPct": 5
+        },
+        {
+          "name": "Protéines de Soie",
+          "note": "Brillance, lissage, toucher soyeux",
+          "maxPct": 5
+        },
+        {
+          "name": "Protéines de Kératine",
+          "note": "Reconstruction capillaire, réparation",
+          "maxPct": 5
+        },
+        {
+          "name": "Protéines de Blé",
+          "note": "Pénétrantes, renfort, élasticité",
+          "maxPct": 5
+        },
+        {
+          "name": "Protéines de Quinoa",
+          "note": "Riches en acides aminés, protectrices",
+          "maxPct": 5
+        },
+        {
+          "name": "Élastine Végétale",
+          "note": "Élasticité, rebond boucles",
+          "maxPct": 3
+        },
+        {
+          "name": "Protéines d'Avoine",
+          "note": "Apaisantes, hydratantes, anti-irritant",
+          "maxPct": 5
+        },
+        {
+          "name": "Protéines de Soja",
+          "note": "Volumisantes, renforçantes",
+          "maxPct": 5
+        },
+        {
+          "name": "Protéines de Pois",
+          "note": "Légères, renforçantes, naturelles",
+          "maxPct": 5
+        },
+        {
+          "name": "Protéines d'Amande",
+          "note": "Nourrissantes, assouplissantes",
+          "maxPct": 5
+        },
+        {
+          "name": "Collagène Végétal",
+          "note": "Filmogène, lissant, élasticité",
+          "maxPct": 3
+        },
+        {
+          "name": "Protéines de Maïs",
+          "note": "Volumisantes, légères, naturelles",
+          "maxPct": 5
+        }
+      ],
+      "Conditionneurs": [
+        {
+          "name": "Honeyquat",
+          "note": "Conditionneur cationique naturel, humectant",
+          "maxPct": 3
+        },
+        {
+          "name": "Polyquaternium-7",
+          "note": "Démêlant, anti-statique, léger",
+          "maxPct": 2
+        },
+        {
+          "name": "Polyquaternium-10",
+          "note": "Conditionneur filmogène, démêlant",
+          "maxPct": 2
+        },
+        {
+          "name": "Polyquaternium-37",
+          "note": "Épaississant et conditionneur",
+          "maxPct": 2
+        },
+        {
+          "name": "Behentrimonium Chloride",
+          "note": "Conditionneur fort, démêlant intense",
+          "maxPct": 3
+        },
+        {
+          "name": "Guar Cationique",
+          "note": "Démêlant naturel, anti-statique, brillance",
+          "maxPct": 1
+        },
+        {
+          "name": "Protéines Cationiques de Soja",
+          "note": "Conditionneur naturel, protecteur fibre",
+          "maxPct": 3
+        }
+      ],
+      "Actifs & Vitamines": [
+        {
+          "name": "Vitamine E (Tocophérol)",
+          "note": "Antioxydant, conservateur naturel, stabilisant",
+          "maxPct": 1
+        },
+        {
+          "name": "Provitamine B5",
+          "note": "Hydratant profond, renforce fibre",
+          "maxPct": 5
+        },
+        {
+          "name": "Zinc PCA",
+          "note": "Séborégulateur, anti-pelliculaire",
+          "maxPct": 2
+        },
+        {
+          "name": "Squalane",
+          "note": "Léger, anti-oxydant, émollient doux",
+          "maxPct": 5
+        },
+        {
+          "name": "Biotine (B7) — cool",
+          "note": "Croissance, fortifiant, actif froid",
+          "maxPct": 2
+        },
+        {
+          "name": "Ceramides Végétaux",
+          "note": "Reconstruction cuticule, lissage",
+          "maxPct": 3
+        },
+        {
+          "name": "Extrait de Caféine",
+          "note": "Stimulant follicule, anti-chute",
+          "maxPct": 2
+        },
+        {
+          "name": "Extrait de Ginseng",
+          "note": "Tonique, croissance, antioxydant",
+          "maxPct": 3
+        },
+        {
+          "name": "CoQ10 (Ubiquinone)",
+          "note": "Antioxydant cellulaire, anti-âge cuir chevelu",
+          "maxPct": 0.5
+        },
+        {
+          "name": "Acide Férulique",
+          "note": "Antioxydant synergique avec Vit C et E",
+          "maxPct": 1
+        },
+        {
+          "name": "Menthol Cristaux",
+          "note": "Rafraîchissant, stimulant circulation",
+          "maxPct": 0.5
+        },
+        {
+          "name": "Allantoïne (cool)",
+          "note": "Cicatrisant, apaisant, régénérant cuir chevelu",
+          "maxPct": 0.5
+        },
+        {
+          "name": "Silice Organique",
+          "note": "Renforce la fibre, brillance, résistance",
+          "maxPct": 3
+        },
+        {
+          "name": "D-Panthénol",
+          "note": "Hydratant pénétrant, réparateur fibre",
+          "maxPct": 5
+        },
+        {
+          "name": "Extrait de Bambou",
+          "note": "Riche en silice, renforçant, brillance",
+          "maxPct": 3
+        }
+      ],
+      "⬇ SKINCARE — Actifs Anti-Hyperpigmentation": [
+        {
+          "name": "Niacinamide",
+          "note": "Vitamine B3 — pores, éclat, sébum · max 10%",
+          "maxPct": 10
+        },
+        {
+          "name": "Alpha Arbutine",
+          "note": "Dépigmentant puissant · max 2%",
+          "maxPct": 2
+        },
+        {
+          "name": "Acide Kojique",
+          "note": "Antifongique et éclaircissant · max 2%",
+          "maxPct": 2
+        },
+        {
+          "name": "Acide Tranexamique",
+          "note": "Anti-taches post-inflammatoires · max 3%",
+          "maxPct": 3
+        },
+        {
+          "name": "Extrait de Réglisse",
+          "note": "Glabridine — éclaircissant doux · max 1%",
+          "maxPct": 1
+        },
+        {
+          "name": "Acide Phytique",
+          "note": "Chélateur et éclaircissant · max 1%",
+          "maxPct": 1
+        },
+        {
+          "name": "Extrait de Daisy",
+          "note": "Bellis Perennis — anti-tyrosinase · max 2%",
+          "maxPct": 2
+        },
+        {
+          "name": "4-Butylresorcinol",
+          "note": "Dépigmentant puissant · max 0.1%",
+          "maxPct": 0.1
+        }
+      ],
+      "⬇ SKINCARE — Actifs Anti-Acné": [
+        {
+          "name": "Acide Salicylique (Skincare)",
+          "note": "BHA exfoliant pores · max 2%",
+          "maxPct": 2
+        },
+        {
+          "name": "Zinc PCA (Skincare)",
+          "note": "Séborégulateur et antibactérien · max 2%",
+          "maxPct": 2
+        },
+        {
+          "name": "Acide Azélaïque",
+          "note": "Anti-acné, anti-taches · max 10%",
+          "maxPct": 10
+        },
+        {
+          "name": "Extrait de Thé Vert (Skincare)",
+          "note": "EGCG antioxydant et anti-acné · max 3%",
+          "maxPct": 3
+        },
+        {
+          "name": "Extrait de Propolis",
+          "note": "Antibactérien naturel · max 2%",
+          "maxPct": 2
+        },
+        {
+          "name": "Soufre (Sulfur)",
+          "note": "Kératolytique anti-acné · max 5%",
+          "maxPct": 5
+        },
+        {
+          "name": "Peroxyde de Benzoyle",
+          "note": "Anti-acné puissant — INTERDIT avec Vit C et Rétinol",
+          "maxPct": 2
+        }
+      ],
+      "⬇ SKINCARE — Actifs Anti-Âge": [
+        {
+          "name": "Rétinol",
+          "note": "Vitamine A — anti-rides, renouvellement · max 0.1%",
+          "maxPct": 0.1
+        },
+        {
+          "name": "Bakuchiol",
+          "note": "Alternative végétale au rétinol · max 2%",
+          "maxPct": 2
+        },
+        {
+          "name": "Argireline",
+          "note": "Acétyl Hexapeptide-3 — anti-rides · max 10%",
+          "maxPct": 10
+        },
+        {
+          "name": "Coenzyme Q10",
+          "note": "Ubiquinone antioxydant · max 1%",
+          "maxPct": 1
+        },
+        {
+          "name": "Resveratrol (Skincare)",
+          "note": "Antioxydant puissant · max 1%",
+          "maxPct": 1
+        },
+        {
+          "name": "DMAE Bitartrate",
+          "note": "Tenseur cutané · max 3%",
+          "maxPct": 3
+        },
+        {
+          "name": "Peptides de Cuivre GHK-Cu",
+          "note": "Régénérant — INTERDIT avec Vit C (Acide Ascorbique) · max 3%",
+          "maxPct": 3
+        },
+        {
+          "name": "Matrixyl 3000",
+          "note": "Palmitoyl tripeptide — fermeté · max 5%",
+          "maxPct": 5
+        },
+        {
+          "name": "Syn-Ake",
+          "note": "Dipeptide anti-rides, effet botox · max 4%",
+          "maxPct": 4
+        }
+      ],
+      "⬇ SKINCARE — Actifs Éclat & Antioxydants": [
+        {
+          "name": "Vitamine C (SAP)",
+          "note": "Sodium Ascorbyl Phosphate stable · max 10%",
+          "maxPct": 10
+        },
+        {
+          "name": "Vitamine C (Acide Ascorbique)",
+          "note": "Forme pure — pH <3.5 requis · max 20%",
+          "maxPct": 20
+        },
+        {
+          "name": "Vitamine C (Ascorbyl Glucoside)",
+          "note": "Forme stable douce · max 2%",
+          "maxPct": 2
+        },
+        {
+          "name": "Vitamine C (MAP)",
+          "note": "Magnesium Ascorbyl Phosphate · max 5%",
+          "maxPct": 5
+        },
+        {
+          "name": "Vitamine E (Skincare)",
+          "note": "Tocophérol antioxydant · max 1%",
+          "maxPct": 1
+        },
+        {
+          "name": "Extrait de Grenade",
+          "note": "Punicalagin antioxydant · max 3%",
+          "maxPct": 3
+        },
+        {
+          "name": "Glutathion",
+          "note": "Antioxydant et éclaircissant · max 2%",
+          "maxPct": 2
+        },
+        {
+          "name": "Extrait de Curcuma",
+          "note": "Curcumine anti-inflammatoire · max 1%",
+          "maxPct": 1
+        }
+      ],
+      "⬇ SKINCARE — Actifs Apaisants": [
+        {
+          "name": "Centella Asiatica",
+          "note": "Cicatrisant et anti-inflammatoire · max 5%",
+          "maxPct": 5
+        },
+        {
+          "name": "Madecassoside",
+          "note": "Actif pur Centella · max 0.4%",
+          "maxPct": 0.4
+        },
+        {
+          "name": "Bisabolol",
+          "note": "Anti-irritant extrait camomille · max 1%",
+          "maxPct": 1
+        },
+        {
+          "name": "Azulène",
+          "note": "Anti-inflammatoire bleu · max 0.5%",
+          "maxPct": 0.5
+        },
+        {
+          "name": "Bêta-Glucane d'Avoine",
+          "note": "Apaisant et immunomodulateur · max 3%",
+          "maxPct": 3
+        },
+        {
+          "name": "Allantoïne",
+          "note": "Cicatrisant, apaisant · max 2%",
+          "maxPct": 2
+        },
+        {
+          "name": "Extrait de Calendula",
+          "note": "Apaisant, anti-inflammatoire · max 3%",
+          "maxPct": 3
+        }
+      ],
+      "⬇ SKINCARE — Humectants & Hydratants": [
+        {
+          "name": "Acide Hyaluronique HMW",
+          "note": "Haut poids moléculaire — effet film · max 1%",
+          "maxPct": 1
+        },
+        {
+          "name": "Acide Hyaluronique LMW",
+          "note": "Bas poids moléculaire — pénétrant · max 0.5%",
+          "maxPct": 0.5
+        },
+        {
+          "name": "Sodium Hyaluronate",
+          "note": "Sel HA — stable, hydratant · max 2%",
+          "maxPct": 2
+        },
+        {
+          "name": "Sodium PCA",
+          "note": "Facteur hydratant naturel · max 5%",
+          "maxPct": 5
+        },
+        {
+          "name": "Propanediol (1,3)",
+          "note": "Humectant doux, véhicule actifs · max 10%",
+          "maxPct": 10
+        },
+        {
+          "name": "Bétaïne",
+          "note": "Humectant, osmoprotecteur · max 5%",
+          "maxPct": 5
+        },
+        {
+          "name": "Urée",
+          "note": "Hydratant kératolytique · max 5%",
+          "maxPct": 5
+        },
+        {
+          "name": "Céramide NP",
+          "note": "Barrière cutanée, anti-TEWL · max 1%",
+          "maxPct": 1
+        },
+        {
+          "name": "Céramide AP",
+          "note": "Barrière cutanée · max 1%",
+          "maxPct": 1
+        },
+        {
+          "name": "Squalane (Skincare)",
+          "note": "Émollient léger non comédogène · max 15%",
+          "maxPct": 15
+        }
+      ],
+      "⬇ SKINCARE — Exfoliants AHA/BHA/PHA": [
+        {
+          "name": "Acide Glycolique",
+          "note": "AHA — exfoliant puissant · max 10%",
+          "maxPct": 10
+        },
+        {
+          "name": "Acide Lactique",
+          "note": "AHA — doux, hydratant · max 10%",
+          "maxPct": 10
+        },
+        {
+          "name": "Acide Mandélique",
+          "note": "AHA — doux, anti-acné · max 10%",
+          "maxPct": 10
+        },
+        {
+          "name": "Acide Tartrique",
+          "note": "AHA — antioxydant · max 5%",
+          "maxPct": 5
+        },
+        {
+          "name": "Gluconolactone (PHA)",
+          "note": "PHA — très doux, hydratant · max 10%",
+          "maxPct": 10
+        },
+        {
+          "name": "Acide Lactobionique",
+          "note": "PHA — antioxydant et doux · max 5%",
+          "maxPct": 5
+        }
+      ],
+      "Ajusteurs pH": [
+        {
+          "name": "Acide Citrique",
+          "note": "Ajusteur pH vers l'acide, puissant",
+          "maxPct": 0.5,
+          "phNote": "Baisse le pH"
+        },
+        {
+          "name": "Acide Lactique",
+          "note": "AHA doux, exfoliation légère, humectant",
+          "maxPct": 0.5,
+          "phNote": "Baisse le pH"
+        },
+        {
+          "name": "Hydroxyde de Sodium (NaOH)",
+          "note": "Alcalinisant, monte le pH — solution 10%",
+          "maxPct": 0.3,
+          "phNote": "Monte le pH"
+        },
+        {
+          "name": "Triéthanolamine (TEA)",
+          "note": "Alcalinisant doux, neutralisant",
+          "maxPct": 0.5,
+          "phNote": "Monte le pH"
+        }
+      ],
+      "Huiles Essentielles": [
+        {
+          "name": "HE Lavande",
+          "note": "Calmante, cuir chevelu sensible, polyvalente",
+          "maxPct": 1
+        },
+        {
+          "name": "HE Romarin",
+          "note": "Stimulante, anti-chute (aussi efficace que minoxidil selon études)",
+          "maxPct": 1
+        },
+        {
+          "name": "HE Tea Tree",
+          "note": "Antibactérienne, anti-pelliculaire, purifiante",
+          "maxPct": 1
+        },
+        {
+          "name": "HE Menthe Poivrée",
+          "note": "Stimulante, fraîcheur intense, microcirculation",
+          "maxPct": 0.5
+        },
+        {
+          "name": "HE Ylang-Ylang",
+          "note": "Séborégulateur, cheveux gras, parfum floral",
+          "maxPct": 0.5
+        },
+        {
+          "name": "HE Cèdre de l'Atlas",
+          "note": "Anti-chute, fortifiant, boisé",
+          "maxPct": 1
+        },
+        {
+          "name": "HE Bergamote",
+          "note": "Purifiant, équilibrant, parfum frais",
+          "maxPct": 1
+        },
+        {
+          "name": "HE Géranium",
+          "note": "Équilibrant, régénérant, floral",
+          "maxPct": 1
+        },
+        {
+          "name": "HE Palmarosa",
+          "note": "Hydratant, régénérant, doux",
+          "maxPct": 1
+        },
+        {
+          "name": "HE Eucalyptus",
+          "note": "Purifiant, décongestionnant, frais",
+          "maxPct": 0.5
+        },
+        {
+          "name": "HE Citron",
+          "note": "Purifiant, astringent, brillance",
+          "maxPct": 1
+        },
+        {
+          "name": "HE Orange Douce",
+          "note": "Purifiante, parfum chaleureux, doux",
+          "maxPct": 1
+        },
+        {
+          "name": "HE Pamplemousse",
+          "note": "Purifiant, tonifiant, frais",
+          "maxPct": 1
+        },
+        {
+          "name": "HE Vétiver",
+          "note": "Ancrant, fortifiant, boisé profond",
+          "maxPct": 0.5
+        },
+        {
+          "name": "HE Patchouli",
+          "note": "Régénérant, boisé, cuir chevelu sec",
+          "maxPct": 0.5
+        },
+        {
+          "name": "HE Sauge Sclarée",
+          "note": "Équilibrante, séborégulateur, hormono-mimétique",
+          "maxPct": 0.5
+        },
+        {
+          "name": "HE Encens (Oliban)",
+          "note": "Régénérant, anti-âge cuir chevelu",
+          "maxPct": 0.5
+        },
+        {
+          "name": "Fragrance (Parfum)",
+          "note": "Parfum cosmétique synthétique ou naturel",
+          "maxPct": 2
+        }
+      ]
+    }
+  },
+  "formula_types": {
+    "LEAVE_IN": {
+      "label": "Leave-in Spray",
+      "icon": "🧴",
+      "hasWater": true,
+      "phases": [
+        "AQUEUSE",
+        "HUILEUSE",
+        "REFROIDISSEMENT"
+      ],
+      "phTarget": [
+        4.5,
+        6
+      ],
+      "defaultWeight": 0
+    },
+    "CONDITIONER": {
+      "label": "Conditionner",
+      "icon": "🪮",
+      "hasWater": true,
+      "phases": [
+        "AQUEUSE",
+        "HUILEUSE",
+        "REFROIDISSEMENT"
+      ],
+      "phTarget": [
+        4,
+        5.5
+      ],
+      "defaultWeight": 0
+    },
+    "MASQUE": {
+      "label": "Masque",
+      "icon": "🌿",
+      "hasWater": true,
+      "phases": [
+        "AQUEUSE",
+        "HUILEUSE",
+        "REFROIDISSEMENT"
+      ],
+      "phTarget": [
+        4,
+        5.5
+      ],
+      "defaultWeight": 0
+    },
+    "SHAMPOING": {
+      "label": "Shampoing",
+      "icon": "🚿",
+      "hasWater": true,
+      "phases": [
+        "AQUEUSE",
+        "HUILEUSE",
+        "REFROIDISSEMENT"
+      ],
+      "phTarget": [
+        5,
+        6.5
+      ],
+      "defaultWeight": 0
+    },
+    "LAIT": {
+      "label": "Lait Capillaire",
+      "icon": "🥛",
+      "hasWater": true,
+      "phases": [
+        "AQUEUSE",
+        "HUILEUSE",
+        "REFROIDISSEMENT"
+      ],
+      "phTarget": [
+        4.5,
+        6
+      ],
+      "defaultWeight": 0
+    },
+    "CREME": {
+      "label": "Crème Capillaire",
+      "icon": "🫙",
+      "hasWater": true,
+      "phases": [
+        "AQUEUSE",
+        "HUILEUSE",
+        "REFROIDISSEMENT"
+      ],
+      "phTarget": [
+        4.5,
+        6
+      ],
+      "defaultWeight": 0
+    },
+    "LOTION": {
+      "label": "Lotion Capillaire",
+      "icon": "💧",
+      "hasWater": true,
+      "phases": [
+        "AQUEUSE",
+        "HUILEUSE",
+        "REFROIDISSEMENT"
+      ],
+      "phTarget": [
+        4.5,
+        6.5
+      ],
+      "defaultWeight": 0
+    },
+    "HUILE": {
+      "label": "Huile Capillaire",
+      "icon": "🫒",
+      "hasWater": false,
+      "phases": [
+        "HUILEUSE"
+      ],
+      "phTarget": null,
+      "defaultWeight": 0
+    },
+    "BAUME": {
+      "label": "Baume Capillaire",
+      "icon": "🍯",
+      "hasWater": false,
+      "phases": [
+        "HUILEUSE",
+        "REFROIDISSEMENT"
+      ],
+      "phTarget": null,
+      "defaultWeight": 0
+    },
+    "CHANTILLY": {
+      "label": "Beurre Chantilly",
+      "icon": "☁️",
+      "hasWater": false,
+      "phases": [
+        "HUILEUSE",
+        "REFROIDISSEMENT"
+      ],
+      "phTarget": null,
+      "defaultWeight": 0
+    },
+    "SERUM": {
+      "label": "Sérum Capillaire",
+      "icon": "⚗️",
+      "hasWater": true,
+      "phases": [
+        "AQUEUSE",
+        "REFROIDISSEMENT"
+      ],
+      "phTarget": [
+        4.5,
+        6
+      ],
+      "defaultWeight": 0
+    },
+    "CUSTOM": {
+      "label": "Personnalisée",
+      "icon": "✨",
+      "hasWater": true,
+      "phases": [
+        "AQUEUSE",
+        "HUILEUSE",
+        "REFROIDISSEMENT"
+      ],
+      "phTarget": null,
+      "defaultWeight": 0
+    }
+  },
+  "compat_rules": [
+    {
+      "groupA": [
+        "BTMS-50",
+        "BTMS-25",
+        "Behentrimonium Chloride",
+        "Honeyquat",
+        "Polyquaternium-7",
+        "Polyquaternium-10",
+        "Guar Cationique",
+        "Protéines Cationiques de Soja"
+      ],
+      "groupB": [
+        "Texapon N70",
+        "Texapon NSO",
+        "Texapon ASV",
+        "Coco Glucoside",
+        "Decyl Glucoside",
+        "Lauryl Glucoside",
+        "Sodium Cocoyl Isethionate (SCI)",
+        "Sodium Lauryl Sulfoacetate (SLSA)",
+        "Sodium Cocoyl Glutamate",
+        "Sodium Lauroyl Sarcosinate",
+        "Cocamidopropyl Bétaïne (CAPB)"
+      ],
+      "type": "error",
+      "msg": "Ingrédient cationique (+) et anionique (-) ensemble → risque de floculation et déstabilisation de l'émulsion"
+    },
+    {
+      "groupA": [
+        "Benzoate de Sodium",
+        "Sorbate de Potassium",
+        "Benzoate + Sorbate (combo)",
+        "Acide Benzoïque",
+        "Acide Sorbique"
+      ],
+      "groupB": [
+        "__NO_ACID__"
+      ],
+      "type": "warn",
+      "msg": "Benzoate/Sorbate inactifs sans acidifiant — Ajouter Acide Citrique ou Lactique pour descendre le pH sous 5.5"
+    },
+    {
+      "groupA": [
+        "Niacinamide"
+      ],
+      "groupB": [
+        "Acide Citrique",
+        "Acide Lactique"
+      ],
+      "type": "warn",
+      "msg": "Niacinamide + Acide fort → à pH < 4, conversion en niacine irritante. Maintenir pH > 4"
+    },
+    {
+      "groupA": [
+        "Phénoxyéthanol"
+      ],
+      "groupB": [
+        "__HIGH_PH__"
+      ],
+      "type": "warn",
+      "msg": "Phénoxyéthanol perd son efficacité au-dessus de pH 7 — Vérifier le pH de votre formule"
+    }
+  ]
+}

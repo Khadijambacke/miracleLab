@@ -21,7 +21,30 @@ class Utilisateur extends Authenticatable
         'mot_de_passe',
         'role',
         'statut_abonnement',
+        'type_plan',
+        'date_expiration_abonnement',
     ];
+
+    protected $casts = [
+        'date_expiration_abonnement' => 'datetime',
+    ];
+
+    public function estAbonnementValide(): bool
+    {
+        if ($this->role === 'ADMIN') {
+            return true;
+        }
+
+        if (strtoupper($this->statut_abonnement ?? '') !== 'ACTIF') {
+            return false;
+        }
+
+        if ($this->date_expiration_abonnement && now()->greaterThan($this->date_expiration_abonnement)) {
+            return false;
+        }
+
+        return true;
+    }
 
     protected $hidden = [
         'mot_de_passe',

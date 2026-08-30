@@ -35,12 +35,14 @@ class AuthController extends Controller
             'telephone' => $validated['telephone'] ?? '',
             'mot_de_passe' => Hash::make($validated['password']),
             'role' => 'CLIENT',
-            'statut_abonnement' => 'inactif',
+            'statut_abonnement' => 'ACTIF',
+            'type_plan' => 'ESSAI_GRATUIT',
+            'date_expiration_abonnement' => now()->addDays(3),
         ]);
 
         Auth::login($user);
 
-        return redirect('/payment');
+        return redirect('/dashboard');
     }
 
     /**

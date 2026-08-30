@@ -18,7 +18,21 @@
       <a class="nav-link" id="nav-pricing">S'abonner</a>
       <button class="btn-login" id="btn-goto-login">Connexion</button>
     </div>
+    <!-- Hamburger (visible mobile/tablet only via CSS) -->
+    <button class="landing-hamburger" id="landing-hamburger" aria-label="Menu">☰</button>
   </nav>
+
+  <!-- Mobile Drawer Menu -->
+  <div class="landing-mobile-menu" id="landing-mobile-menu">
+    <div class="landing-mobile-drawer">
+      <button class="landing-mobile-close" id="landing-mobile-close" aria-label="Fermer">✕</button>
+      <a class="landing-mobile-link" href="#features-section">Fonctionnalités</a>
+      <a class="landing-mobile-link" href="#roadmap-section">Comment ça marche</a>
+      <a class="landing-mobile-link" href="#pricing-section">S'abonner</a>
+      <a class="landing-mobile-cta" href="/login">Connexion</a>
+      <a class="landing-mobile-cta" href="/register" style="background:#FFD700; color:#1A1A00; box-shadow: 0 4px 12px rgba(255,215,0,0.3);">Accéder au Miracle Lab</a>
+    </div>
+  </div>
 
   <header class="hero-section">
     <span class="hero-tag">Laboratoire Révolutionnaire</span>
@@ -89,25 +103,141 @@
     </div>
   </section>
 
-  <section class="pricing-section" id="pricing-section">
-    <div class="pricing-container">
-      <h2 class="pricing-title">Un tarif unique et transparent</h2>
-      <div class="pricing-card">
-        <div style="font-weight: 800; font-size: 16px; color: #A78BFA; text-transform: uppercase;">Accès Formulateur</div>
-        <div class="price-value">
-          <div class="price-main">
-            <span class="price-number">15 000</span>
-            <span class="price-currency">FCFA</span>
+  <section class="pricing-section" id="pricing-section" style="padding: 80px 20px; background: linear-gradient(180deg, #F8F5FF 0%, #FFFFFF 100%); color: #1C0F32; position: relative;">
+    
+    <div class="pricing-container" style="max-width: 1140px; margin: 0 auto; text-align: center; position: relative; z-index: 2;">
+      
+      <!-- Badge Essai Gratuit -->
+      <div style="margin-bottom: 16px;">
+        <span style="background: #F3E8FF; color: #7C3AED; font-size: 13px; font-weight: 800; padding: 8px 22px; border-radius: 30px; text-transform: uppercase; letter-spacing: 0.8px; display: inline-block; box-shadow: 0 2px 10px rgba(124, 58, 237, 0.1);">
+          ESSAI GRATUIT DE 3 JOURS · SANS ENGAGEMENT
+        </span>
+      </div>
+
+      <h2 class="pricing-title" style="font-size: clamp(28px, 4.5vw, 42px); font-weight: 900; color: #1C0F32; margin-bottom: 12px; letter-spacing: -0.5px;">
+        Des formules adaptées à vos besoins
+      </h2>
+      <p style="color: #4B5563; font-size: 16px; max-width: 580px; margin: 0 auto 50px; line-height: 1.6; font-weight: 500;">
+        Accédez à la calculette de formulation cosmétique, au moteur anti-conflits et au générateur de fiches PDF.
+      </p>
+
+      <!-- Cartes de prix -->
+      <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 28px; align-items: stretch; margin-top: 20px;">
+        
+        <!-- Carte 1 Mois -->
+        <div style="flex: 1; min-width: 280px; max-width: 350px; background: #FFFFFF; border: none; border-radius: 24px; padding: 36px 28px; display: flex; flex-direction: column; justify-content: space-between; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.06); transition: transform 0.3s ease;">
+          <div>
+            <div style="font-weight: 800; font-size: 13px; color: #7C3AED; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;">1 MOIS</div>
+            
+            <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px;">
+              <span style="font-size: 42px; font-weight: 900; color: #1C0F32; line-height: 1;">2 900</span>
+              <span style="font-size: 18px; font-weight: 800; color: #1C0F32;">FCFA</span>
+            </div>
+            <div style="font-size: 13px; color: #6B7280; margin-bottom: 24px; font-weight: 600;">2 900 FCFA / mois</div>
+
+            <hr style="border: 0; border-top: 1px solid #F3F4F6; margin-bottom: 24px;" />
+
+            <ul style="list-style: none; padding: 0; margin: 0 0 28px; display: flex; flex-direction: column; gap: 14px;">
+              <li style="display: flex; align-items: center; gap: 12px; font-size: 14px; color: #374151; font-weight: 500;">
+                <i data-lucide="check-circle-2" style="width: 18px; height: 18px; color: #7C3AED; flex-shrink: 0;"></i> Calculette Miracle Lab illimitée
+              </li>
+              <li style="display: flex; align-items: center; gap: 12px; font-size: 14px; color: #374151; font-weight: 500;">
+                <i data-lucide="check-circle-2" style="width: 18px; height: 18px; color: #7C3AED; flex-shrink: 0;"></i> Détection des conflits d'actifs
+              </li>
+              <li style="display: flex; align-items: center; gap: 12px; font-size: 14px; color: #374151; font-weight: 500;">
+                <i data-lucide="check-circle-2" style="width: 18px; height: 18px; color: #7C3AED; flex-shrink: 0;"></i> Export Fiches de fabrication PDF
+              </li>
+              <li style="display: flex; align-items: center; gap: 12px; font-size: 14px; color: #374151; font-weight: 500;">
+                <i data-lucide="check-circle-2" style="width: 18px; height: 18px; color: #7C3AED; flex-shrink: 0;"></i> Support technique par chat
+              </li>
+            </ul>
           </div>
+
+          <a href="/register" style="background: #F3E8FF; color: #7C3AED; padding: 14px 20px; border-radius: 14px; font-weight: 700; font-size: 14px; text-decoration: none; display: block; text-align: center; transition: all 0.2s ease;">
+            Essayer gratuitement (3 jours)
+          </a>
         </div>
-        <ul class="pricing-features">
-          <li><i data-lucide="check-circle-2" style="width: 18px; height: 18px; color: #FFD700; flex-shrink: 0;"></i> Calculette Miracle Lab illimitée (Skincare & Haircare)</li>
-          <li><i data-lucide="check-circle-2" style="width: 18px; height: 18px; color: #FFD700; flex-shrink: 0;"></i> Moteur de détection de conflits chimiques complet</li>
-          <li><i data-lucide="check-circle-2" style="width: 18px; height: 18px; color: #FFD700; flex-shrink: 0;"></i> Historique des compositions & duplication</li>
-          <li><i data-lucide="check-circle-2" style="width: 18px; height: 18px; color: #FFD700; flex-shrink: 0;"></i> Génération de fiches de fabrication PDF professionnelles</li>
-          <li><i data-lucide="check-circle-2" style="width: 18px; height: 18px; color: #FFD700; flex-shrink: 0;"></i> Support technique & formulation en direct par chat</li>
-        </ul>
-        <button class="btn-pricing-cta" id="btn-pricing-buy">Démarrer maintenant</button>
+
+        <!-- Carte 3 Mois (POPULAIRE - FEATURED DARK PURPLE & GOLD HERO CARD) -->
+        <div style="flex: 1; min-width: 280px; max-width: 360px; background: linear-gradient(145deg, #1C0F32 0%, #2A174A 100%); border: none; border-radius: 24px; padding: 40px 28px 36px; display: flex; flex-direction: column; justify-content: space-between; text-align: left; position: relative; box-shadow: 0 20px 50px rgba(28, 15, 50, 0.35); transform: scale(1.03); z-index: 3;">
+          
+          <!-- Badge Flottant Top -->
+          <div style="position: absolute; top: -16px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #FFD700, #F59E0B); color: #1A1000; font-size: 11px; font-weight: 900; padding: 5px 18px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 14px rgba(255, 215, 0, 0.4); white-space: nowrap;">
+            POPULAIRE · ÉCONOMIE -32%
+          </div>
+
+          <div>
+            <div style="font-weight: 800; font-size: 13px; color: #FFD700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;">3 MOIS</div>
+            
+            <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px;">
+              <span style="font-size: 44px; font-weight: 900; color: #FFD700; line-height: 1; text-shadow: 0 2px 10px rgba(255,215,0,0.3);">5 900</span>
+              <span style="font-size: 18px; font-weight: 800; color: #FFD700;">FCFA</span>
+            </div>
+            <div style="font-size: 13px; color: #FDE047; margin-bottom: 24px; font-weight: 700;">soit 1 967 FCFA / mois</div>
+
+            <hr style="border: 0; border-top: 1px solid rgba(255, 215, 0, 0.25); margin-bottom: 24px;" />
+
+            <ul style="list-style: none; padding: 0; margin: 0 0 28px; display: flex; flex-direction: column; gap: 14px;">
+              <li style="display: flex; align-items: center; gap: 12px; font-size: 14px; color: #FFFFFF; font-weight: 600;">
+                <i data-lucide="check-circle-2" style="width: 18px; height: 18px; color: #FFD700; flex-shrink: 0;"></i> Calculette Miracle Lab illimitée
+              </li>
+              <li style="display: flex; align-items: center; gap: 12px; font-size: 14px; color: #FFFFFF; font-weight: 600;">
+                <i data-lucide="check-circle-2" style="width: 18px; height: 18px; color: #FFD700; flex-shrink: 0;"></i> Détection des conflits d'actifs
+              </li>
+              <li style="display: flex; align-items: center; gap: 12px; font-size: 14px; color: #FFFFFF; font-weight: 600;">
+                <i data-lucide="check-circle-2" style="width: 18px; height: 18px; color: #FFD700; flex-shrink: 0;"></i> Export Fiches de fabrication PDF
+              </li>
+              <li style="display: flex; align-items: center; gap: 12px; font-size: 14px; color: #FFFFFF; font-weight: 600;">
+                <i data-lucide="check-circle-2" style="width: 18px; height: 18px; color: #FFD700; flex-shrink: 0;"></i> Support technique par chat
+              </li>
+            </ul>
+          </div>
+
+          <a href="/register" style="background: linear-gradient(135deg, #FFD700 0%, #F59E0B 100%); color: #1A1000; padding: 15px 20px; border-radius: 14px; font-weight: 900; font-size: 15px; text-decoration: none; display: block; text-align: center; box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4); transition: transform 0.2s ease;">
+            Essayer gratuitement (3 jours)
+          </a>
+        </div>
+
+        <!-- Carte 1 An -->
+        <div style="flex: 1; min-width: 280px; max-width: 350px; background: #FFFFFF; border: none; border-radius: 24px; padding: 36px 28px; display: flex; flex-direction: column; justify-content: space-between; text-align: left; position: relative; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06); transition: transform 0.3s ease;">
+          
+          <!-- Badge Flottant Top -->
+          <div style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: #10B981; color: #FFFFFF; font-size: 11px; font-weight: 800; padding: 4px 14px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap;">
+            MEILLEURE OFFRE · -48%
+          </div>
+
+          <div>
+            <div style="font-weight: 800; font-size: 13px; color: #059669; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;">1 AN (12 MOIS)</div>
+            
+            <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px;">
+              <span style="font-size: 42px; font-weight: 900; color: #1C0F32; line-height: 1;">17 900</span>
+              <span style="font-size: 18px; font-weight: 800; color: #1C0F32;">FCFA</span>
+            </div>
+            <div style="font-size: 13px; color: #059669; margin-bottom: 24px; font-weight: 600;">soit 1 492 FCFA / mois</div>
+
+            <hr style="border: 0; border-top: 1px solid #ECFDF5; margin-bottom: 24px;" />
+
+            <ul style="list-style: none; padding: 0; margin: 0 0 28px; display: flex; flex-direction: column; gap: 14px;">
+              <li style="display: flex; align-items: center; gap: 12px; font-size: 14px; color: #374151; font-weight: 500;">
+                <i data-lucide="check-circle-2" style="width: 18px; height: 18px; color: #10B981; flex-shrink: 0;"></i> Calculette Miracle Lab illimitée
+              </li>
+              <li style="display: flex; align-items: center; gap: 12px; font-size: 14px; color: #374151; font-weight: 500;">
+                <i data-lucide="check-circle-2" style="width: 18px; height: 18px; color: #10B981; flex-shrink: 0;"></i> Détection des conflits d'actifs
+              </li>
+              <li style="display: flex; align-items: center; gap: 12px; font-size: 14px; color: #374151; font-weight: 500;">
+                <i data-lucide="check-circle-2" style="width: 18px; height: 18px; color: #10B981; flex-shrink: 0;"></i> Export Fiches de fabrication PDF
+              </li>
+              <li style="display: flex; align-items: center; gap: 12px; font-size: 14px; color: #374151; font-weight: 500;">
+                <i data-lucide="check-circle-2" style="width: 18px; height: 18px; color: #10B981; flex-shrink: 0;"></i> Support technique par chat
+              </li>
+            </ul>
+          </div>
+
+          <a href="/register" style="background: #ECFDF5; color: #059669; padding: 14px 20px; border-radius: 14px; font-weight: 700; font-size: 14px; text-decoration: none; display: block; text-align: center; transition: all 0.2s ease;">
+            Essayer gratuitement (3 jours)
+          </a>
+        </div>
+
       </div>
     </div>
   </section>
@@ -128,6 +258,27 @@
     document.getElementById("nav-pricing")?.addEventListener("click", () => { document.getElementById("pricing-section")?.scrollIntoView({ behavior: 'smooth' }); });
     document.getElementById("btn-hero-cta")?.addEventListener("click", () => { window.location.href = "/register"; });
     document.getElementById("btn-pricing-buy")?.addEventListener("click", () => { window.location.href = "/register"; });
+
+    // Mobile Hamburger Menu
+    const hamburger = document.getElementById("landing-hamburger");
+    const mobileMenu = document.getElementById("landing-mobile-menu");
+    const mobileClose = document.getElementById("landing-mobile-close");
+    
+    hamburger?.addEventListener("click", () => { mobileMenu?.classList.add("open"); });
+    mobileClose?.addEventListener("click", () => { mobileMenu?.classList.remove("open"); });
+    mobileMenu?.addEventListener("click", (e) => { if (e.target === mobileMenu) mobileMenu.classList.remove("open"); });
+
+    // Close drawer when clicking a link and scroll smoothly
+    document.querySelectorAll(".landing-mobile-link").forEach(link => {
+      link.addEventListener("click", (e) => {
+        mobileMenu?.classList.remove("open");
+        const href = link.getAttribute("href");
+        if (href && href.startsWith("#")) {
+          e.preventDefault();
+          document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
   </script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>

@@ -10,6 +10,8 @@
     window.LARAVEL_CLIENTS = @json($clients);
     window.LARAVEL_CHATS = @json($chats ?? []);
     window.LARAVEL_USER = @json($user);
+    window.LARAVEL_STATS = @json($stats ?? []);
+    window.LARAVEL_INGREDIENTS = @json($ingredients);
   </script>
   @vite(['resources/css/style.css'])
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -176,6 +178,51 @@
       libNewName: "", libNewNote: "", libNewPhase: "AQUEUSE"
     };
 
+    function mergeDatabaseIngredients() {
+      if (Array.isArray(window.LARAVEL_INGREDIENTS) && window.LARAVEL_INGREDIENTS.length > 0) {
+        window.LARAVEL_INGREDIENTS.forEach(ing => {
+          const rawPhase = (ing.phase || 'AQUEUSE').toUpperCase();
+          const phase = (rawPhase === 'PHASE_A' || rawPhase === 'WATER') ? 'AQUEUSE' 
+                      : (rawPhase === 'PHASE_B' || rawPhase === 'OIL') ? 'HUILEUSE' 
+                      : (rawPhase === 'PHASE_C' || rawPhase === 'COOL_DOWN') ? 'REFROIDISSEMENT'
+                      : rawPhase;
+          
+          if (!state.library[phase]) {
+            state.library[phase] = {};
+          }
+          
+          const groupName = ing.est_personnalise 
+            ? "✨ Ingrédients Clients" 
+            : (ing.nom_groupe || "📦 Base de Données");
+
+          // Check if ingredient already exists in ANY group of this phase
+          let exists = false;
+          for (const g of Object.keys(state.library[phase])) {
+            if (state.library[phase][g].some(item => item.name.toLowerCase() === (ing.nom || '').toLowerCase())) {
+              const found = state.library[phase][g].find(item => item.name.toLowerCase() === (ing.nom || '').toLowerCase());
+              if (found) found.id = ing.id;
+              exists = true;
+              break;
+            }
+          }
+
+          if (!exists && ing.nom) {
+            if (!state.library[phase][groupName]) {
+              state.library[phase][groupName] = [];
+            }
+            state.library[phase][groupName].push({
+              id: ing.id,
+              name: ing.nom,
+              isCustom: !!ing.est_personnalise,
+              note: ing.inci ? `INCI: ${ing.inci}` : (ing.note || "Ingrédient global"),
+              maxPct: ing.pourcentage_max || ing.max_pct || ing.dosage_max || null
+            });
+          }
+        });
+      }
+    }
+    mergeDatabaseIngredients();
+
     function render() {
       document.getElementById("app").innerHTML = buildAdminHTML();
       bindEvents();
@@ -254,9 +301,36 @@
     }
 
     function buildStatsHTML() {
-      const activeCount = state.clients.filter(c => c.subscription_status === 'ACTIVE').length;
-      const totalRev = activeCount * 15000 + 45000;
-      const formulasCreated = state.savedFormulas.length + 22;
+      // ── Real data from Laravel ──
+      const S = window.LARAVEL_STATS || {};
+      const activeCount    = S.activeUsers      ?? state.clients.filter(c => (c.statut_abonnement || c.subscription_status || '').toUpperCase() === 'ACTIF').length;
+      const totalClients   = S.totalUsers       ?? state.clients.length;
+      const inactiveCount  = S.inactiveUsers    ?? (totalClients - activeCount);
+      const totalRev       = S.realRevenue      ?? (activeCount * 15000);
+      const totalFormulas  = S.totalFormules    ?? 0;
+      const totalIngs      = S.totalIngredients ?? 0;
+      const convRate       = S.conversionRate   ?? (totalClients > 0 ? Math.round((activeCount / totalClients) * 100) : 0);
+
+      // Formulas by category
+      const skincareCount  = S.skincareCount    ?? 0;
+      const haircareCount  = S.haircareCount    ?? 0;
+      const autresCount    = S.autresCount      ?? 0;
+      const maxCat         = Math.max(skincareCount, haircareCount, autresCount, 1);
+      const skinH          = Math.max(Math.round((skincareCount / maxCat) * 160), 8);
+      const hairH          = Math.max(Math.round((haircareCount / maxCat) * 160), 8);
+      const autresH        = Math.max(Math.round((autresCount   / maxCat) * 160), 8);
+
+      // Ingredient phase breakdown
+      const ingAqueuse     = S.ingAqueuse          ?? 0;
+      const ingHuileuse    = S.ingHuileuse         ?? 0;
+      const ingRefr        = S.ingRefroidissement  ?? 0;
+      const ingAqPct       = S.ingAqueusePct       ?? 0;
+      const ingHuPct       = S.ingHuileusePct      ?? 0;
+      const ingRePct       = S.ingRefroidissementPct ?? 0;
+
+      // Top ingredients
+      const topIngs = (S.topIngredients || []).slice(0, 5);
+      const maxUsage = topIngs.length > 0 ? (topIngs[0].usage_count || 1) : 1;
 
       return `
       <div class="admin-stats-grid" style="margin-bottom: 30px;">
@@ -273,12 +347,7 @@
             <span style="font-size: 28px; font-weight: 800; color: #1C0F32; letter-spacing: -0.5px;">${totalRev.toLocaleString('fr-FR')}</span>
             <span style="font-size: 14px; font-weight: 600; color: #8E7E72;">FCFA</span>
           </div>
-          <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
-            <span style="display: inline-flex; align-items: center; gap: 4px; background: #DEF7EC; color: #03543F; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700;">
-              <svg data-lucide="trending-up" style="width: 12px; height: 12px; stroke-width: 2.5;"></svg> +24%
-            </span>
-            <span style="font-size: 11.5px; color: #8E7E72;">ce mois</span>
-          </div>
+          <div style="font-size: 11.5px; color: #8E7E72;">${activeCount} abonné(s) actif(s) × 15 000 FCFA</div>
         </div>
 
         <!-- Active Clients Card -->
@@ -291,14 +360,9 @@
           </div>
           <div style="display: flex; align-items: baseline; gap: 6px;">
             <span style="font-size: 28px; font-weight: 800; color: #1C0F32; letter-spacing: -0.5px;">${activeCount}</span>
-            <span style="font-size: 16px; font-weight: 600; color: #8E7E72;">/ ${state.clients.length}</span>
+            <span style="font-size: 16px; font-weight: 600; color: #8E7E72;">/ ${totalClients}</span>
           </div>
-          <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
-            <span style="display: inline-flex; align-items: center; gap: 4px; background: #DEF7EC; color: #03543F; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700;">
-              <svg data-lucide="trending-up" style="width: 12px; height: 12px; stroke-width: 2.5;"></svg> +2
-            </span>
-            <span style="font-size: 11.5px; color: #8E7E72;">ce jour</span>
-          </div>
+          <div style="font-size: 11.5px; color: #8E7E72;">${inactiveCount} inactif(s) &bull; ${totalClients} total</div>
         </div>
 
         <!-- Formulas Card -->
@@ -310,14 +374,9 @@
             </div>
           </div>
           <div style="display: flex; align-items: baseline; gap: 6px;">
-            <span style="font-size: 28px; font-weight: 800; color: #1C0F32; letter-spacing: -0.5px;">${formulasCreated}</span>
+            <span style="font-size: 28px; font-weight: 800; color: #1C0F32; letter-spacing: -0.5px;">${totalFormulas}</span>
           </div>
-          <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
-            <span style="display: inline-flex; align-items: center; gap: 4px; background: #DEF7EC; color: #03543F; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700;">
-              <svg data-lucide="trending-up" style="width: 12px; height: 12px; stroke-width: 2.5;"></svg> +8
-            </span>
-            <span style="font-size: 11.5px; color: #8E7E72;">cette semaine</span>
-          </div>
+          <div style="font-size: 11.5px; color: #8E7E72;">${skincareCount} Skincare &bull; ${haircareCount} Haircare</div>
         </div>
 
         <!-- Conversion Card -->
@@ -329,14 +388,9 @@
             </div>
           </div>
           <div style="display: flex; align-items: baseline; gap: 6px;">
-            <span style="font-size: 28px; font-weight: 800; color: #1C0F32; letter-spacing: -0.5px;">74%</span>
+            <span style="font-size: 28px; font-weight: 800; color: #1C0F32; letter-spacing: -0.5px;">${convRate}%</span>
           </div>
-          <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
-            <span style="display: inline-flex; align-items: center; gap: 4px; background: #DEF7EC; color: #03543F; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700;">
-              <svg data-lucide="trending-up" style="width: 12px; height: 12px; stroke-width: 2.5;"></svg> +2.1%
-            </span>
-            <span style="font-size: 11.5px; color: #8E7E72;">ce mois</span>
-          </div>
+          <div style="font-size: 11.5px; color: #8E7E72;">Actifs / Total inscrits</div>
         </div>
       </div>
 
@@ -347,28 +401,25 @@
             <h3 style="font-weight: 800; font-size: 16px; color: #1C0F32; margin: 0 0 4px 0;">Volume de Formulation par Catégorie</h3>
             <p style="font-size: 12px; color: #8E7E72; margin: 0;">Répartition des formules enregistrées par les utilisateurs</p>
           </div>
-          <button style="background: rgba(124, 58, 237, 0.05); color: #7C3AED; border: none; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;">
-            <svg data-lucide="download" style="width: 14px; height: 14px;"></svg> Rapport
-          </button>
         </div>
 
         <div style="display: flex; align-items: flex-end; gap: 24px; height: 200px; padding-bottom: 10px; border-bottom: 1px solid #F1EBE3;">
           <!-- Skincare -->
           <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 12px;">
-            <span style="font-size: 13px; font-weight: 800; color: #C2185B;">18</span>
-            <div style="width: 100%; max-width: 120px; height: 140px; background: linear-gradient(180deg, rgba(194,24,91,0.6) 0%, rgba(194,24,91,0.15) 100%); border-radius: 8px 8px 0 0; position: relative; overflow: hidden; border: 1px solid rgba(194,24,91,0.2); border-bottom: none;"></div>
+            <span style="font-size: 13px; font-weight: 800; color: #C2185B;">${skincareCount}</span>
+            <div style="width: 100%; max-width: 120px; height: ${skinH}px; background: linear-gradient(180deg, rgba(194,24,91,0.6) 0%, rgba(194,24,91,0.15) 100%); border-radius: 8px 8px 0 0; border: 1px solid rgba(194,24,91,0.2); border-bottom: none;"></div>
           </div>
           
           <!-- Haircare -->
           <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 12px;">
-            <span style="font-size: 13px; font-weight: 800; color: #7C3AED;">12</span>
-            <div style="width: 100%; max-width: 120px; height: 100px; background: linear-gradient(180deg, rgba(124,58,237,0.6) 0%, rgba(124,58,237,0.15) 100%); border-radius: 8px 8px 0 0; position: relative; overflow: hidden; border: 1px solid rgba(124,58,237,0.2); border-bottom: none;"></div>
+            <span style="font-size: 13px; font-weight: 800; color: #7C3AED;">${haircareCount}</span>
+            <div style="width: 100%; max-width: 120px; height: ${hairH}px; background: linear-gradient(180deg, rgba(124,58,237,0.6) 0%, rgba(124,58,237,0.15) 100%); border-radius: 8px 8px 0 0; border: 1px solid rgba(124,58,237,0.2); border-bottom: none;"></div>
           </div>
 
           <!-- Autres -->
           <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 12px;">
-            <span style="font-size: 13px; font-weight: 800; color: #10B981;">4</span>
-            <div style="width: 100%; max-width: 120px; height: 40px; background: linear-gradient(180deg, rgba(16,185,129,0.6) 0%, rgba(16,185,129,0.15) 100%); border-radius: 8px 8px 0 0; position: relative; overflow: hidden; border: 1px solid rgba(16,185,129,0.2); border-bottom: none;"></div>
+            <span style="font-size: 13px; font-weight: 800; color: #10B981;">${autresCount}</span>
+            <div style="width: 100%; max-width: 120px; height: ${autresH}px; background: linear-gradient(180deg, rgba(16,185,129,0.6) 0%, rgba(16,185,129,0.15) 100%); border-radius: 8px 8px 0 0; border: 1px solid rgba(16,185,129,0.2); border-bottom: none;"></div>
           </div>
         </div>
         
@@ -385,26 +436,26 @@
         <!-- Dynamique Bibliothèque -->
         <div style="background: #FFF; border: 1px solid #F1EBE3; border-radius: 20px; box-shadow: 0 4px 12px rgba(186,126,192,0.02); padding: 25px; display: flex; flex-direction: column;">
           <h3 style="font-weight: 800; font-size: 14px; color: #1C0F32; margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px;">
-            <svg data-lucide="database" style="width: 16px; height: 16px; color: #10B981;"></svg> Dynamique Bibliothèque
+            <svg data-lucide="database" style="width: 16px; height: 16px; color: #10B981;"></svg> Bibliothèque Ingrédients
           </h3>
           
           <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
             <div style="text-align: center; margin-bottom: 24px;">
-              <div style="font-size: 36px; font-weight: 800; color: #1C0F32; letter-spacing: -1px; line-height: 1;">142</div>
-              <div style="font-size: 13px; font-weight: 700; color: #8E7E72; margin-top: 6px;">Ingrédients ajoutés par vos clients</div>
+              <div style="font-size: 36px; font-weight: 800; color: #1C0F32; letter-spacing: -1px; line-height: 1;">${totalIngs}</div>
+              <div style="font-size: 13px; font-weight: 700; color: #8E7E72; margin-top: 6px;">Ingrédients dans la base</div>
             </div>
 
             <!-- Progress Bar breakdown -->
             <div style="display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 12px;">
-              <div style="width: 65%; background: #A21CAF;" title="Actifs"></div>
-              <div style="width: 25%; background: #F59E0B;" title="Huiles"></div>
-              <div style="width: 10%; background: #3B82F6;" title="Additifs"></div>
+              <div style="width: ${ingAqPct}%; background: #A21CAF;" title="Phase Aqueuse"></div>
+              <div style="width: ${ingHuPct}%; background: #F59E0B;" title="Phase Huileuse"></div>
+              <div style="width: ${ingRePct}%; background: #3B82F6;" title="Phase Refroidissement"></div>
             </div>
 
             <div style="display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 600; color: #64748B;">
-              <div style="display: flex; align-items: center; gap: 4px;"><div style="width: 8px; height: 8px; border-radius: 2px; background: #A21CAF;"></div> Actifs (65%)</div>
-              <div style="display: flex; align-items: center; gap: 4px;"><div style="width: 8px; height: 8px; border-radius: 2px; background: #F59E0B;"></div> Huiles (25%)</div>
-              <div style="display: flex; align-items: center; gap: 4px;"><div style="width: 8px; height: 8px; border-radius: 2px; background: #3B82F6;"></div> Additifs (10%)</div>
+              <div style="display: flex; align-items: center; gap: 4px;"><div style="width: 8px; height: 8px; border-radius: 2px; background: #A21CAF;"></div> Aqueuse (${ingAqPct}%)</div>
+              <div style="display: flex; align-items: center; gap: 4px;"><div style="width: 8px; height: 8px; border-radius: 2px; background: #F59E0B;"></div> Huileuse (${ingHuPct}%)</div>
+              <div style="display: flex; align-items: center; gap: 4px;"><div style="width: 8px; height: 8px; border-radius: 2px; background: #3B82F6;"></div> Refr. (${ingRePct}%)</div>
             </div>
           </div>
         </div>
@@ -414,28 +465,21 @@
           <h3 style="font-weight: 800; font-size: 14px; color: #1C0F32; margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px;">
             <svg data-lucide="star" style="width: 16px; height: 16px; color: #F59E0B;"></svg> Ingrédients les plus utilisés
           </h3>
-          <div style="display: flex; flex-direction: column; gap: 12px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #FAF7F2; border-radius: 12px; border: 1px solid #FAF0E6;">
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            ${topIngs.length > 0 ? topIngs.map((ing, i) => `
               <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-weight: 800; color: #7C3AED; font-size: 12px;">#1</span>
-                <span style="font-size: 13px; font-weight: 700; color: #1C0F32;">Eau Déminéralisée</span>
+                <span style="font-weight: 800; color: #7C3AED; font-size: 12px; min-width: 24px;">#${i+1}</span>
+                <div style="flex: 1;">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span style="font-size: 13px; font-weight: 700; color: #1C0F32;">${esc(ing.nom || ing.name || '')}</span>
+                    <span style="font-size: 11px; color: #8E7E72; font-weight: 600;">${ing.usage_count} formule(s)</span>
+                  </div>
+                  <div style="height: 4px; border-radius: 2px; background: #F3F0FF; overflow: hidden;">
+                    <div style="height: 100%; width: ${Math.round((ing.usage_count / maxUsage) * 100)}%; background: linear-gradient(90deg, #7C3AED, #A855F7); border-radius: 2px;"></div>
+                  </div>
+                </div>
               </div>
-              <span style="font-size: 12px; color: #8E7E72; font-weight: 600;">Présent dans 98%</span>
-            </div>
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #FAF7F2; border-radius: 12px; border: 1px solid #FAF0E6;">
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-weight: 800; color: #7C3AED; font-size: 12px;">#2</span>
-                <span style="font-size: 13px; font-weight: 700; color: #1C0F32;">Glycérine Végétale</span>
-              </div>
-              <span style="font-size: 12px; color: #8E7E72; font-weight: 600;">Présent dans 85%</span>
-            </div>
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #FAF7F2; border-radius: 12px; border: 1px solid #FAF0E6;">
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-weight: 800; color: #7C3AED; font-size: 12px;">#3</span>
-                <span style="font-size: 13px; font-weight: 700; color: #1C0F32;">Cosgard (Conservateur)</span>
-              </div>
-              <span style="font-size: 12px; color: #8E7E72; font-weight: 600;">Présent dans 72%</span>
-            </div>
+            `).join('') : '<div style="color: #8E7E72; font-size: 13px; text-align: center; padding: 20px 0;">Aucune donnée disponible</div>'}
           </div>
         </div>
 
@@ -795,18 +839,67 @@
       const groups = state.library[ph];
       const groupKey = ph === "AQUEUSE" ? "Actifs Capillaires" : ph === "HUILEUSE" ? "Huiles Végétales" : "Actifs & Vitamines";
       if (!groups[groupKey]) groups[groupKey] = [];
-      groups[groupKey].push({ name: n, note: state.libNewNote.trim() || "Ingrédient personnalisé" });
+      
+      const newItem = {
+        name: n,
+        note: state.libNewNote.trim() || "Ingrédient global",
+        isCustom: false
+      };
+      groups[groupKey].push(newItem);
+
+      // Save to Backend Database asynchronously
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      if (csrfToken) {
+        fetch('/ingredients', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            nom: n,
+            phase: ph,
+            inci: state.libNewNote.trim() || null
+          })
+        })
+        .then(r => r.json())
+        .then(data => {
+          if (data.ingredient && data.ingredient.id) {
+            newItem.id = data.ingredient.id;
+          }
+        })
+        .catch(err => console.error('Erreur sauvegarde ingrédient admin:', err));
+      }
+
       state.libNewName = ""; state.libNewNote = ""; state.libAdding = false;
-      showToast("✅ Ingrédient ajouté !");
+      showToast("✅ Ingrédient ajouté à la base globale !");
       render();
     }
 
     function deleteFromLibrary(phase, name) {
       const groups = state.library[phase];
+      let targetId = null;
+
       for (const g of Object.keys(groups)) {
+        const item = (groups[g] || []).find(i => i.name === name);
+        if (item && item.id) targetId = item.id;
         groups[g] = groups[g].filter(i => i.name !== name);
       }
       render();
+
+      if (targetId) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (csrfToken) {
+          fetch(`/ingredients/${targetId}`, {
+            method: 'DELETE',
+            headers: {
+              'X-CSRF-TOKEN': csrfToken,
+              'Accept': 'application/json'
+            }
+          }).catch(err => console.error('Erreur suppression ingrédient admin:', err));
+        }
+      }
     }
 
     function bindEvents() {

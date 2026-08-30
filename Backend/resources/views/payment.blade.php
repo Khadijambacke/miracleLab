@@ -3,149 +3,259 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Paiement Paydunya · Miss Miracle</title>
+  <title>Choix de l'Abonnement · Miss Miracle</title>
   @vite(['resources/css/style.css'])
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    .auth-card {
-      padding: 24px !important;
-      gap: 16px !important;
-      border-radius: 20px !important;
-      box-shadow: 0 12px 32px rgba(124, 58, 237, 0.06) !important;
+    .plan-card {
+      border: 2px solid #E5E7EB;
+      border-radius: 16px;
+      padding: 18px 20px;
+      margin-bottom: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-align: left;
+      position: relative;
+      background: #FAFAFA;
     }
-    .paydunya-panel {
-      gap: 14px !important;
+    .plan-card:hover {
+      border-color: #A855F7;
+      background: #FDF4FF;
     }
-    .payment-methods-grid {
-      gap: 8px !important;
-      margin-bottom: 10px !important;
+    .plan-card.selected {
+      border-color: #9333EA;
+      background: #F5F3FF;
+      box-shadow: 0 4px 14px rgba(147, 51, 234, 0.15);
     }
-    .pay-method-card {
-      padding: 10px 8px !important;
-      gap: 4px !important;
-      border-radius: 12px !important;
+    .plan-badge {
+      position: absolute;
+      top: -10px;
+      right: 18px;
+      background: linear-gradient(135deg, #9333EA, #7E22CE);
+      color: #FFF;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
-    .pay-method-logo {
-      height: 24px !important;
-      margin-bottom: 0 !important;
+    .radio-circle {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid #D1D5DB;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
     }
-    .pay-method-logo svg {
-      height: 24px !important;
-      width: auto !important;
+    .plan-card.selected .radio-circle {
+      border-color: #9333EA;
+      background-color: #9333EA;
     }
-    .btn-auth-submit {
-      padding: 12px !important;
-      font-size: 14px !important;
-      border-radius: 10px !important;
+    .radio-circle-inner {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #FFF;
+      display: none;
     }
-    .btn-cancel {
-      padding: 10px !important;
-      font-size: 13px !important;
-      border-radius: 10px !important;
-      margin-top: 5px !important;
-    }
-    .auth-label {
-      font-size: 11px !important;
-      margin-bottom: 4px !important;
-    }
-    .auth-input-field {
-      padding: 10px 12px !important;
-      font-size: 13px !important;
-      border-radius: 8px !important;
+    .plan-card.selected .radio-circle-inner {
+      display: block;
     }
   </style>
 </head>
-<body style="background: linear-gradient(135deg, #F3F0FF 0%, #EDE9FE 50%, #F5F3FF 100%); min-height: 100vh;">
-
-  <div class="auth-overlay" style="position: static; min-height: 100vh; padding: 40px 20px;">
-    <div class="auth-card" style="max-width: 480px;" id="payment-card-body">
-      <div class="paydunya-header">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <span>PAYDUNYA SECURE PAYMENT</span>
-      </div>
-      
-      <div class="paydunya-panel" id="paydunya-panel">
-        <div style="display:flex; justify-content:space-between; border-bottom:1px solid #E5E7EB; padding-bottom:10px; margin-bottom: 14px;">
-          <span style="color:#4B5563; font-weight:600">Formule Accès Lab</span>
-          <span style="font-weight:800; color:#111827">15 000 FCFA</span>
-        </div>
-        
-        <div class="auth-label" style="margin-bottom: 10px;">Choisir un moyen de paiement</div>
-        <div class="payment-methods-grid" style="margin-bottom: 20px;">
-          <div class="pay-method-card selected" data-method="wave">
-            <span class="pay-method-logo">
-              <svg width="48" height="32" viewBox="0 0 100 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="100" height="64" rx="8" fill="#1D9BF0"/>
-                <path d="M50 14C42 14 36 20 36 28C36 33.6 38.4 37.6 42.4 40.8C42.4 43.2 40 45.6 36.8 47.2C42.4 47.2 47.2 44 48.8 41.6C49.6 41.6 50.4 41.6 50.4 41.6C50.4 41.6 51.2 41.6 52 41.6C53.6 44 58.4 47.2 64 47.2C60.8 45.6 58.4 43.2 58.4 40.8C62.4 37.6 64.8 33.6 64.8 28C64.8 20 58.8 14 50 14Z" fill="white"/>
-                <circle cx="44.4" cy="26" r="2.4" fill="#1D9BF0"/>
-                <circle cx="55.6" cy="26" r="2.4" fill="#1D9BF0"/>
-                <path d="M50 30.8L46 33.2H54L50 30.8Z" fill="#FFA500"/>
-              </svg>
-            </span>
-            <span>Wave</span>
-          </div>
-          <div class="pay-method-card" data-method="om">
-            <span class="pay-method-logo">
-              <svg width="48" height="32" viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="48" height="32" rx="6" fill="#FF6600"/>
-                <text x="6" y="22" fill="white" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="900" font-size="10" letter-spacing="-0.3px">orange</text>
-              </svg>
-            </span>
-            <span>Orange Money</span>
-          </div>
-          <div class="pay-method-card" data-method="card">
-            <span class="pay-method-logo">
-              <svg width="48" height="32" viewBox="0 0 60 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="2" y="10" width="26" height="20" rx="3" fill="#1A1F71"/>
-                <text x="5" y="23" fill="white" font-family="sans-serif" font-weight="bold" font-style="italic" font-size="9">VISA</text>
-                <rect x="32" y="10" width="26" height="20" rx="3" fill="#3A3A3A"/>
-                <circle cx="41" cy="20" r="7" fill="#EB001B"/>
-                <circle cx="49" cy="20" r="7" fill="#F79E1B" fill-opacity="0.8"/>
-              </svg>
-            </span>
-            <span>Carte Bancaire</span>
-          </div>
-          <div class="pay-method-card" data-method="free">
-            <span class="pay-method-logo">
-              <svg width="48" height="32" viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="48" height="32" rx="6" fill="#E21A22"/>
-                <text x="10" y="21" fill="white" font-family="Georgia, serif" font-style="italic" font-weight="bold" font-size="14">free</text>
-              </svg>
-            </span>
-            <span>Free Money</span>
-          </div>
-        </div>
- 
-        <form action="{{ route('payment.process') }}" method="POST">
-            @csrf
-            <div id="payment-method-fields">
-            <div class="auth-group">
-                <label class="auth-label">Numéro Mobile Money / Carte (Simulation)</label>
-                <input class="auth-input-field" name="card_number" type="text" value="771234567" required/>
-                <input type="hidden" name="card_name" value="Test Simulation" />
-            </div>
-            </div>
+<body style="background: linear-gradient(135deg, #F3F0FF 0%, #EDE9FE 50%, #F5F3FF 100%); min-height: 100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; font-family:'Plus Jakarta Sans',sans-serif;">
+  
+  <div style="background:#fff; border-radius:24px; padding:36px 32px; box-shadow:0 20px 40px rgba(0,0,0,0.1); max-width:480px; width:100%; text-align:center;">
     
-            <button type="submit" class="btn-auth-submit" style="width:100%; margin-top: 15px;">
-            Valider et payer 15 000 FCFA
-            </button>
-        </form>
-        <a href="{{ route('dashboard') }}" class="btn-cancel" style="display:block; text-align:center; width:100%; border:1px solid #D1D5DB; padding:12px; margin-top: 10px; text-decoration:none; color:inherit;">Annuler et aller au tableau de bord</a>
-      </div>
+    <div style="margin-bottom: 24px;">
+      <span style="background: #F3E8FF; color: #7E22CE; font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 20px;">Accès Miracle Lab</span>
+      <h2 style="color:#1C0F32; font-size:24px; font-weight:800; margin-top:12px; margin-bottom:8px;">Choisissez votre formule</h2>
+      <p style="color:#6B7280; font-size:14px; line-height:1.5;">Débloquez la création illimitée de formules cosmétiques et l'accès complet au laboratoire.</p>
     </div>
+
+    <!-- Options de Plan -->
+    <div style="margin-bottom: 24px;">
+      
+      <!-- Option 1 Mois -->
+      <div class="plan-card" data-plan="1_mois" data-price="2 900 FCFA">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div class="radio-circle"><div class="radio-circle-inner"></div></div>
+          <div>
+            <div style="font-weight:700; font-size:15px; color:#1F2937;">1 Mois</div>
+            <div style="font-size:12px; color:#6B7280;">Flexibilité mensuelle</div>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-weight:800; font-size:16px; color:#1C0F32;">2 900 FCFA</div>
+          <div style="font-size:11px; color:#6B7280;">2 900 FCFA / mois</div>
+        </div>
+      </div>
+
+      <!-- Option 3 Mois (Sélectionné par défaut) -->
+      <div class="plan-card selected" data-plan="3_mois" data-price="5 900 FCFA">
+        <span class="plan-badge">Populaire</span>
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div class="radio-circle"><div class="radio-circle-inner"></div></div>
+          <div>
+            <div style="font-weight:700; font-size:15px; color:#1F2937;">3 Mois</div>
+            <div style="font-size:12px; color:#059669; font-weight:600;">Économisez ~32%</div>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-weight:800; font-size:16px; color:#9333EA;">5 900 FCFA</div>
+          <div style="font-size:11px; color:#6B7280;">1 967 FCFA / mois</div>
+        </div>
+      </div>
+
+      <!-- Option 1 An -->
+      <div class="plan-card" data-plan="12_mois" data-price="17 900 FCFA">
+        <span class="plan-badge" style="background: linear-gradient(135deg, #059669, #047857);">Meilleure Offre</span>
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div class="radio-circle"><div class="radio-circle-inner"></div></div>
+          <div>
+            <div style="font-weight:700; font-size:15px; color:#1F2937;">1 An (12 mois)</div>
+            <div style="font-size:12px; color:#059669; font-weight:600;">Économisez ~48%</div>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-weight:800; font-size:16px; color:#1C0F32;">17 900 FCFA</div>
+          <div style="font-size:11px; color:#6B7280;">1 492 FCFA / mois</div>
+        </div>
+      </div>
+
+    </div>
+    
+    <div id="payment-status-message" style="display:none; margin-bottom:20px; padding:12px; border-radius:12px; font-size:14px; font-weight:600; background:#EFF6FF; color:#1D4ED8; border:1px solid #BFDBFE;">
+      ⏳ Préparation du paiement...
+    </div>
+
+    <button id="btn-reopen-paytech" style="width:100%; background: linear-gradient(135deg, #9333EA 0%, #7E22CE 100%); color:white; padding:16px; border:none; border-radius:14px; font-weight:700; font-size:16px; cursor:pointer; box-shadow:0 4px 14px rgba(147,51,234,0.3); transition: transform 0.1s ease;">
+      Activer la formule (5 900 FCFA)
+    </button>
+    
+    <form action="{{ route('logout') }}" method="POST" style="margin-top:24px;">
+        @csrf
+        <button type="submit" style="background:none; border:none; color:#6B7280; font-size:14px; text-decoration:underline; cursor:pointer;">Se déconnecter</button>
+    </form>
   </div>
 
-  @vite(['resources/js/shared.js'])
+  <script src="https://paytech.sn/cdn/paytech.min.js"></script>
   <script>
-    let activeMethod = "wave";
-    // Handle payment method click
-    document.querySelectorAll(".pay-method-card").forEach(card => {
-      card.addEventListener("click", e => {
-        document.querySelectorAll(".pay-method-card").forEach(c => c.classList.remove("selected"));
-        e.currentTarget.classList.add("selected");
+    document.addEventListener("DOMContentLoaded", function() {
+      const statusMsg = document.getElementById("payment-status-message");
+      const reopenBtn = document.getElementById("btn-reopen-paytech");
+      const planCards = document.querySelectorAll(".plan-card");
+      const csrfToken = "{{ csrf_token() }}";
+      
+      let selectedPlan = "3_mois";
+      let selectedPrice = "5 900 FCFA";
+
+      // Sélection des cartes de plan
+      planCards.forEach(card => {
+        card.addEventListener("click", function() {
+          planCards.forEach(c => c.classList.remove("selected"));
+          this.classList.add("selected");
+          selectedPlan = this.getAttribute("data-plan");
+          selectedPrice = this.getAttribute("data-price");
+          reopenBtn.innerHTML = `Activer la formule (${selectedPrice})`;
+        });
       });
+
+      function triggerPayment() {
+        statusMsg.style.display = "block";
+        reopenBtn.style.display = "none";
+        statusMsg.style.background = "#EFF6FF";
+        statusMsg.style.color = "#1D4ED8";
+        statusMsg.style.border = "1px solid #BFDBFE";
+        statusMsg.innerHTML = `Initialisation du paiement (${selectedPrice})...`;
+
+        fetch("/paytech/process", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "X-CSRF-TOKEN": csrfToken,
+            "ngrok-skip-browser-warning": "true"
+          },
+          body: JSON.stringify({
+            plan: selectedPlan
+          })
+        })
+        .then(async r => {
+          const text = await r.text();
+          if (!r.ok) throw new Error("Erreur HTTP " + r.status);
+          return JSON.parse(text);
+        })
+        .then(data => {
+          if (data.success && data.redirect_url) {
+            statusMsg.style.background = "#FEF3C7";
+            statusMsg.style.color = "#92400E";
+            statusMsg.style.border = "1px solid #FCD34D";
+            statusMsg.innerHTML = "Veuillez patienter, validation de votre transaction en cours...";
+
+            try {
+              (new PayTech()).withOptions({
+                tokenUrl: data.redirect_url,
+                presentationMode: PayTech.OPEN_IN_POPUP
+              }).send();
+            } catch(err) {
+              window.location.href = data.redirect_url;
+              return;
+            }
+
+            // Polling de confirmation
+            const ref = data.reference;
+            if (ref) {
+              const pollId = setInterval(() => {
+                fetch(`/payment/status/${ref}`, { headers: { "Accept": "application/json", "ngrok-skip-browser-warning": "true" } })
+                  .then(r => r.json())
+                  .then(st => {
+                    if (st.status === "REUSSI") {
+                      clearInterval(pollId);
+                      statusMsg.style.background = "#D1FAE5";
+                      statusMsg.style.color = "#065F46";
+                      statusMsg.style.border = "1px solid #6EE7B7";
+                      statusMsg.innerHTML = "Paiement confirmé ! Ouverture de votre espace...";
+                      setTimeout(() => { window.location.href = '/dashboard'; }, 300);
+                    } else if (st.status === "ECHOUE" || st.status === "ANNULE") {
+                      clearInterval(pollId);
+                      statusMsg.style.background = "#FEE2E2";
+                      statusMsg.style.color = "#991B1B";
+                      statusMsg.style.border = "1px solid #FCA5A5";
+                      statusMsg.innerHTML = "Le paiement a échoué ou a été annulé.";
+                      setTimeout(() => { reopenBtn.style.display = "block"; }, 1000);
+                    }
+                  }).catch(() => {});
+              }, 1500);
+            }
+
+          } else {
+            statusMsg.style.background = "#FEE2E2";
+            statusMsg.style.color = "#991B1B";
+            statusMsg.style.border = "1px solid #FCA5A5";
+            statusMsg.innerHTML = `Erreur : ${data.message || 'Erreur lors du paiement'}`;
+            reopenBtn.style.display = "block";
+          }
+        })
+        .catch(err => {
+          statusMsg.style.background = "#FEE2E2";
+          statusMsg.style.color = "#991B1B";
+          statusMsg.style.border = "1px solid #FCA5A5";
+          statusMsg.innerHTML = "Erreur de connexion.";
+          reopenBtn.style.display = "block";
+        });
+      }
+
+      reopenBtn.addEventListener("click", triggerPayment);
     });
   </script>
 </body>

@@ -632,6 +632,21 @@ const COMPAT_RULES = [
     groupA: ["Phénoxyéthanol"],
     groupB: ["__HIGH_PH__"],
     type: "warn", msg: "Phénoxyéthanol perd son efficacité au-dessus de pH 7 — Vérifier le pH de votre formule"
+  },
+  {
+    groupA: ["Rétinol"],
+    groupB: ["Peroxyde de Benzoyle"],
+    type: "error", msg: "Rétinol + Peroxyde de Benzoyle → Le peroxyde de benzoyle oxyde et désactive totalement le rétinol."
+  },
+  {
+    groupA: ["Vitamine C (Acide Ascorbique)", "Acide Ascorbique"],
+    groupB: ["Peroxyde de Benzoyle"],
+    type: "error", msg: "Vitamine C + Peroxyde de Benzoyle → Le peroxyde de benzoyle oxyde la vitamine C et la rend inactive."
+  },
+  {
+    groupA: ["Copper Peptides", "Copper Peptides (GHK-Cu)", "Peptides de Cuivre GHK-Cu"],
+    groupB: ["Vitamine C (Acide Ascorbique)", "Acide Ascorbique"],
+    type: "error", msg: "Copper Peptides + Vitamine C → La vitamine C oxyde les peptides de cuivre et les dégrade."
   }
 ];
 

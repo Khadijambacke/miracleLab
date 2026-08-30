@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+    'intech' => [
+        'base_url' => env('INTECH_BASE_URL', 'https://api.intech.sn'),
+        'api_key' => env('INTECH_API_KEY'),
+    ],
+
+    'paytech' => [
+        'env' => env('PAYTECH_ENV', 'test'),
+        'api_key' => env('PAYTECH_API_KEY', ''),
+        'api_secret' => env('PAYTECH_API_SECRET', ''),
+    ],
+
 ];
